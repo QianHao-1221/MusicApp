@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">瑶</string>
+    <string name="title_activity_login">Sign in</string>
+
+    <string name="forget">  忘记密码</string>
+    <string name="register">注册新账户</string>
+</resources>
