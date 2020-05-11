@@ -1,9 +1,9 @@
 package com.example.musicapp;
 
 import android.os.Build;
+import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
@@ -73,6 +73,7 @@ public class LocalMusicActivity extends AppCompatActivity {
 
     private void initMusicList() {
         flbMusicList.clear();
+
         for (int i = 0; i < flbMusics.length; i++) {
             flbMusicList.add(flbMusics[i]);
         }

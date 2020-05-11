@@ -37,6 +37,8 @@ public class UserMusicListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user_music_list);
 
+        initData();
+
         //接受传来的数据：音乐名、图片id
         Intent intent = getIntent();
         String musicName = intent.getStringExtra(MUSIC_NAME);
@@ -44,7 +46,6 @@ public class UserMusicListActivity extends AppCompatActivity {
 
         //获取CollapsingToolbarLayout实例
         CollapsingToolbarLayout collapsingToolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.user_list_collapsing_toolbar);
-
 
         ImageView musicImageView = (ImageView) findViewById(R.id.user_list_image);
         //获取toolbar图片和底下listview的实例
@@ -71,6 +72,10 @@ public class UserMusicListActivity extends AppCompatActivity {
         }
         collapsingToolbarLayout.setTitle(musicName);
         Glide.with(this).load(musicImageId).into(musicImageView);
+    }
+
+    private void initData() {
+
     }
 
     //嵌套Listview用的方法

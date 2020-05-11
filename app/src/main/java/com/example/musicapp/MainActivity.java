@@ -102,6 +102,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+//        Music music = new Music();
+//        music.setMusic_no(1);
+//        music.setLry_local("/storage/emulated/legacy/起风了.txt");
+//        music.setMusic_local("/storage/emulated/legacy/起风了.mp3");
+//        music.setMusic_name("起风了");
+//        music.setMusic_player("吴青峰");
+//        music.setMusic_package("");
+//        Log.e("OK",""+R.drawable.qfl);
+
         //toolbar加载
         actionBar = getSupportActionBar();
         if (actionBar != null) {
