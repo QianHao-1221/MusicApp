@@ -8,11 +8,15 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 
 import com.example.musicapp.adapter.FLBAdapter;
 import com.example.musicapp.db.FLBMusic;
+import com.example.musicapp.db.Music;
+
+import org.litepal.LitePal;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,6 +78,26 @@ public class LocalMusicActivity extends AppCompatActivity {
     private void initMusicList() {
         flbMusicList.clear();
 
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        List<Music> musics = LitePal.order("music_no").find(Music.class);
+                        for (Music music :musics){
+                            Log.e("LocalMusicActivity",""+music.getMusic_no());
+                        }
+
+//                                for (int i = 0; i < flbMusics.length; i++) {
+//
+//                                    flbMusicList.add(flbMusics[i]);
+//                                }
+
+                    }
+                });
+            }
+        }).start();
         for (int i = 0; i < flbMusics.length; i++) {
             flbMusicList.add(flbMusics[i]);
         }
