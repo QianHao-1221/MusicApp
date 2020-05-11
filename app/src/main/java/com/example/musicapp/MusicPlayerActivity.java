@@ -69,6 +69,7 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
         allTime = (TextView) findViewById(R.id.all_time);
 
         intent3 = new Intent(this, MusicPlayerService.class);
+        intent3.putExtra("musicName","music.mp3");
         conn = new MyConnection();
 
         //使用混合的方法开启服务，
@@ -258,6 +259,7 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
     protected void onDestroy() {
         super.onDestroy();
         unbindService(conn);
+        stopService(intent3);
     }
 
     @Override

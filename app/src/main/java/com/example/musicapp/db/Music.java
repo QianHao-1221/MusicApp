@@ -8,8 +8,6 @@ import org.litepal.crud.LitePalSupport;
 
 public class Music extends LitePalSupport {
 
-    private int music_no;
-
     private String music_name;
 
     private String music_player;
@@ -45,14 +43,6 @@ public class Music extends LitePalSupport {
 
     public void setImage_no(int image_no) {
         this.image_no = image_no;
-    }
-
-    public int getMusic_no() {
-        return music_no;
-    }
-
-    public void setMusic_no(int music_no) {
-        this.music_no = music_no;
     }
 
     public String getMusic_name() {

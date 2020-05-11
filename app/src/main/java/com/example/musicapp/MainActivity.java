@@ -30,7 +30,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.musicapp.adapter.MyViewPagerAdapter;
-import com.example.musicapp.db.Music;
 import com.example.musicapp.db.User;
 import com.example.musicapp.layout.FirstLayout;
 import com.example.musicapp.layout.SecondLayout;
@@ -102,15 +101,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //获取toolbar实例
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        Music music = new Music();
-        music.setMusic_no(1);
-        music.setLry_local("/storage/emulated/legacy/起风了.txt");
-        music.setMusic_local("/storage/emulated/legacy/起风了.mp3");
-        music.setMusic_name("起风了");
-        music.setMusic_player("吴青峰");
-        music.setMusic_package("起风了哦");
-        music.setImage_no(2131558626);
 
         //toolbar加载
         actionBar = getSupportActionBar();
@@ -259,7 +249,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (sit == 0) {
             a = "blue";
         } else {
-            users = LitePal.where("user_no = ?", returnUserNo).find(User.class);
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    users = LitePal.where("user_no = ?", returnUserNo).find(User.class);
+                }
+            }).start();
             for (User user : users) {
                 a = user.getCustom_color();
             }

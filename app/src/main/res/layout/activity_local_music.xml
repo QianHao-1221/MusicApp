@@ -37,14 +37,34 @@
     </LinearLayout>
 
     <View
-        android:layout_marginTop="5dp"
         android:layout_width="match_parent"
         android:layout_height="2dp"
+        android:layout_marginTop="5dp"
         android:background="#111" />
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/local_recycle_view"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="#dfebe8"
+        android:orientation="vertical">
 
+        <TextView
+            android:id="@+id/music_list_title"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_marginBottom="6dp"
+            android:background="#e9faf6"
+            android:gravity="center_vertical"
+            android:paddingLeft="10dp"
+            android:text="@string/title_string"
+            android:textSize="16dp" />
+
+        <ListView
+            android:id="@+id/music_list"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+    </LinearLayout>
 </LinearLayout>

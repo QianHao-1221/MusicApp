@@ -11,13 +11,16 @@ import java.io.IOException;
 
 public class MusicPlayerService extends Service {
 
-//    private String path = "/sdcard/Music/music.mp3";
-    private String path="/storage/emulated/legacy/music.mp3";
+    //    private String path = "/sdcard/Music/music.mp3";
+    private String path = "/storage/emulated/legacy/";
     private MediaPlayer player;
+
+    private String musicName = "music.mp3";
 
     @Override
     public IBinder onBind(Intent intent) {
         //当执行完了onCreate后，就会执行onBind把操作歌曲的方法返回
+        musicName = intent.getStringExtra("musicName");
         return new MyBinder();
     }
 
@@ -27,7 +30,7 @@ public class MusicPlayerService extends Service {
         //这里只执行一次，用于准备播放器
         player = new MediaPlayer();
         try {
-            player.setDataSource(path);
+            player.setDataSource(path + musicName);
             //准备资源
             player.prepare();
         } catch (IOException e) {
@@ -38,9 +41,10 @@ public class MusicPlayerService extends Service {
     //该方法包含关于歌曲的操作
     public class MyBinder extends Binder {
         //判断是否处于播放状态
-        public boolean isPlaying(){
+        public boolean isPlaying() {
             return player.isPlaying();
         }
+
         //播放或暂停歌曲
         public void play() {
             if (player.isPlaying()) {
@@ -51,17 +55,17 @@ public class MusicPlayerService extends Service {
         }
 
         //返回歌曲的长度，单位为毫秒
-        public int getDuration(){
+        public int getDuration() {
             return player.getDuration();
         }
 
         //返回歌曲目前的进度，单位为毫秒
-        public int getCurrentPosition(){
+        public int getCurrentPosition() {
             return player.getCurrentPosition();
         }
 
         //设置歌曲播放的进度，单位为毫秒
-        public void seekTo(int mesc){
+        public void seekTo(int mesc) {
             player.seekTo(mesc);
         }
     }
