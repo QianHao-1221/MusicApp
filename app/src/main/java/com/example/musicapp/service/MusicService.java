@@ -2,133 +2,110 @@ package com.example.musicapp.service;
 
 import android.app.Service;
 import android.content.Intent;
-import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.Binder;
 import android.os.IBinder;
 
-import com.example.musicapp.MyBinderInterface;
-import com.example.musicapp.db.MusicInfo;
-import com.example.musicapp.utils.MusicUtils;
-
-import java.io.IOException;
-import java.util.List;
-
+/**
+ * Created by West on 2015/11/10.
+ */
 public class MusicService extends Service {
 
-    private MediaPlayer mPlayer;
-    private int seekLength = 0;
-    private int currentIndex = -1;
+    private String[] musicDir = new String[]{};
 
-    private List<MusicInfo> musicList;
+    private int musicIndex = 0;
 
+    public final IBinder binder = new MyBinder();
+
+    public class MyBinder extends Binder {
+        public MusicService getService() {
+            return MusicService.this;
+        }
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        musicDir = intent.getStringArrayExtra("data");
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+    public static MediaPlayer mp = new MediaPlayer();
+
+    public MusicService() {
+        try {
+            mp.setDataSource("/storage/emulated/legacy/music.mp3");
+            //mp.setDataSource(Environment.getDataDirectory().getAbsolutePath()+"/You.mp3");
+            mp.prepare();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void playOrPause() {
+        if (mp.isPlaying()) {
+            mp.pause();
+        } else {
+            mp.start();
+        }
+    }
+
+    public void stop() {
+        if (mp != null) {
+            mp.stop();
+            try {
+                mp.prepare();
+                mp.seekTo(0);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void nextMusic() {
+        if (mp != null && musicIndex < musicDir.length - 1) {
+            mp.stop();
+            try {
+                mp.reset();
+                mp.setDataSource(musicDir[musicIndex + 1]);
+                musicIndex++;
+                mp.prepare();
+                mp.seekTo(0);
+                mp.start();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void preMusic() {
+        if (mp != null && musicIndex > 0) {
+            mp.stop();
+            try {
+                mp.reset();
+                mp.setDataSource(musicDir[musicIndex - 1]);
+                musicIndex--;
+                mp.prepare();
+                mp.seekTo(0);
+                mp.start();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        mp.stop();
+        mp.release();
+        super.onDestroy();
+    }
+
+    /**
+     * onBind 是 Service 的虚方法，因此我们不得不实现它。
+     * 返回 null，表示客服端不能建立到此服务的连接。
+     */
     @Override
     public IBinder onBind(Intent intent) {
-        return new MyBinder();
+        return binder;
     }
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        InitPlayer();
-        //通过工具类MusicUtils获取音乐信息列表
-        musicList = MusicUtils.ResolveMusicToList(getApplicationContext());
-    }
-
-    private void InitPlayer() {
-        mPlayer = new MediaPlayer();
-        mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-    }
-
-    private class MyBinder extends Binder implements MyBinderInterface {
-
-        @Override
-        public void Pause() {
-            if (mPlayer.isPlaying()){
-                mPlayer.pause();
-                seekLength = mPlayer.getCurrentPosition();
-            }
-        }
-
-        @Override
-        public void Resume() {
-            mPlayer.seekTo(seekLength);
-            mPlayer.start();
-        }
-
-        @Override
-        public void Play() {
-            mPlayer.reset();
-            Uri path = Uri.parse(musicList.get(currentIndex).getMusic_path());
-
-            try {
-                mPlayer.setDataSource(String.valueOf(path));
-                mPlayer.prepare();
-            } catch (IOException e) {
-                e.printStackTrace();
-        }
-            mPlayer.seekTo(seekLength);
-            mPlayer.start();
-        }
-
-        @Override
-        public void PlayNext() {
-            currentIndex += 1;
-            if (currentIndex >= musicList.size()){
-                currentIndex = 0;
-            }
-            seekLength = 0;
-            Play();
-        }
-
-        @Override
-        public void PlayPrev() {
-            currentIndex -= 1;
-            if (currentIndex <= 0){
-                currentIndex = musicList.size() - 1;
-            }
-            seekLength = 0;
-            Play();
-        }
-
-        @Override
-        public void Release() {
-            mPlayer.reset();
-            mPlayer.stop();
-            mPlayer.release();
-        }
-
-        @Override
-        public boolean isPlaying() {
-            return mPlayer.isPlaying();
-        }
-
-        @Override
-        public int getDuration() {
-            return mPlayer.getDuration();
-        }
-
-        @Override
-        public int getCurrentPosition() {
-            return mPlayer.getCurrentPosition();
-        }
-
-        @Override
-        public void seekTo(int length) {
-            seekLength = length;
-            mPlayer.seekTo(length);
-        }
-
-        @Override
-        public int getCurrentIndex() {
-            return currentIndex;
-        }
-
-        @Override
-        public void setCurrentIndex(int currentIdx) {
-            currentIndex = currentIdx;
-        }
-    }
-
 }

@@ -33,6 +33,7 @@ import com.example.musicapp.adapter.MyViewPagerAdapter;
 import com.example.musicapp.db.User;
 import com.example.musicapp.layout.FirstLayout;
 import com.example.musicapp.layout.SecondLayout;
+import com.example.musicapp.service.MusicService;
 import com.example.musicapp.utils.CustomViewPager;
 
 import org.litepal.LitePal;
@@ -558,5 +559,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void finish() {
         super.finish();
+        Intent intent = new Intent(MainActivity.this, MusicService.class);
+        stopService(intent);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Intent intent = new Intent(MainActivity.this, MusicService.class);
+        stopService(intent);
     }
 }

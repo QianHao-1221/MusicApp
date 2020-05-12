@@ -44,11 +44,6 @@
             android:name=".MusicPlayerActivity"
             android:label="" />
 
-        <service
-            android:name=".service.MusicPlayerService"
-            android:enabled="true"
-            android:exported="true" />
-
         <activity
             android:name=".RecMusicListInfoActivity"
             android:label="" />
@@ -67,6 +62,10 @@
             android:label="已购" />
         <activity android:name=".UpdateNameActivity" />
         <activity android:name=".UpdatePasswordActivity"></activity>
+
+        <service
+            android:name="com.example.musicapp.service.MusicService"
+            android:exported="true"></service>
     </application>
 
 </manifest>

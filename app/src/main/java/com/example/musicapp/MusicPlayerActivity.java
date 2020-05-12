@@ -4,9 +4,7 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Message;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -17,42 +15,86 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.musicapp.service.MusicPlayerService;
+import com.example.musicapp.service.MusicService;
 
 import java.text.SimpleDateFormat;
-import java.util.TimeZone;
 
 public class MusicPlayerActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private ImageView playWay, playBtn;
+    private ImageView playWay, lastMusic, playBtn, nextMusic;
 
     private int pickWay = 1;
 
-    private Intent intent3;
+    public Intent intent;
 
     private int musicSituation = 0;//0:未播放 1:开始播放
 
     private TextView currentTime, allTime;
 
-    private String currentT, allT;
+    private MusicService musicService;
 
-    private MusicPlayerService.MyBinder musicControl;
-    private MyConnection conn;
     private SeekBar seekBar;
-    private static final int UPDATE_PROGRESS = 0;
 
+    private SimpleDateFormat time = new SimpleDateFormat("m:ss");
 
-    private SimpleDateFormat format = new SimpleDateFormat("mm:ss");
+    public void stop(){
+        stopService(intent);
+    }
 
-    private Handler handler = new Handler() {
+    private ServiceConnection sc = new ServiceConnection() {
         @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case UPDATE_PROGRESS:
-                    updateProgress();
-                    break;
-                default:
+        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+            musicService = ((MusicService.MyBinder) iBinder).getService();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            musicService = null;
+        }
+    };
+
+    private void bindServiceConnection() {
+        intent = new Intent(MusicPlayerActivity.this, MusicService.class);
+        Bundle bundle = new Bundle();
+        bundle.putStringArray("data", new String[]{"/storage/emulated/legacy/music.mp3", "/storage/emulated/legacy/1.mp3",
+                "/storage/emulated/legacy/2.mp3", "/storage/emulated/legacy/3.mp3"});
+        intent.putExtras(bundle);
+
+        startService(intent);
+        bindService(intent, sc, this.BIND_AUTO_CREATE);
+    }
+
+    public android.os.Handler handler = new android.os.Handler();
+    public Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+            if (musicService.mp.isPlaying()) {
+                playBtn.setImageResource(R.drawable.pause);
+            } else {
+                playBtn.setImageResource(R.drawable.start);
             }
+            currentTime.setText(time.format(musicService.mp.getCurrentPosition()));
+            allTime.setText(time.format(musicService.mp.getDuration()));
+            seekBar.setProgress(musicService.mp.getCurrentPosition());
+            seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                    if (fromUser) {
+                        musicService.mp.seekTo(seekBar.getProgress());
+                    }
+                }
+
+                @Override
+                public void onStartTrackingTouch(SeekBar seekBar) {
+
+                }
+
+                @Override
+                public void onStopTrackingTouch(SeekBar seekBar) {
+
+                }
+            });
+            handler.postDelayed(runnable, 100);
         }
     };
 
@@ -61,54 +103,19 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_music_player);
 
-        playWay = (ImageView) findViewById(R.id.play_way);
-        playBtn = (ImageView) findViewById(R.id.player_main_btn);
-        seekBar = (SeekBar) findViewById(R.id.player_bar);
+        musicService = new MusicService();
 
+        bindServiceConnection();
+
+        playWay = (ImageView) findViewById(R.id.play_way);
+        seekBar = (SeekBar) findViewById(R.id.player_bar);
+        seekBar.setProgress(musicService.mp.getCurrentPosition());
+        seekBar.setMax(musicService.mp.getDuration());
+
+        playBtn = (ImageView) findViewById(R.id.player_main_btn);
         currentTime = (TextView) findViewById(R.id.current_time);
         allTime = (TextView) findViewById(R.id.all_time);
 
-        intent3 = new Intent(this, MusicPlayerService.class);
-        intent3.putExtra("musicName","music.mp3");
-        conn = new MyConnection();
-
-        //使用混合的方法开启服务，
-        startService(intent3);
-        bindService(intent3, conn, BIND_AUTO_CREATE);
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-                            @Override
-                            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                                //进度条改变
-                                if (fromUser) {
-                                    musicControl.seekTo(progress);
-                                    format.setTimeZone(TimeZone.getTimeZone("GMT+00:00"));
-                                    currentT = format.format(musicControl.getCurrentPosition());
-                                    currentTime.setText(currentT);
-                                }
-                            }
-
-                            @Override
-                            public void onStartTrackingTouch(SeekBar seekBar) {
-                                //开始触摸进度条
-                            }
-
-                            @Override
-                            public void onStopTrackingTouch(SeekBar seekBar) {
-                                //停止触摸进度条
-                            }
-
-                        });
-                    }
-                });
-            }
-        }).start();
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -120,28 +127,20 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
 
     }
 
-    //服务启动完成后会进入到这个方法
-    private class MyConnection implements ServiceConnection {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            //获得service中的MyBinder
-            musicControl = (MusicPlayerService.MyBinder) service;
-            //更新按钮的文字
-            updatePlayImage();
-            //设置进度条的最大值
-            seekBar.setMax(musicControl.getDuration());
-            //设置进度条的进度
-            seekBar.setProgress(musicControl.getCurrentPosition());
-
-            format.setTimeZone(TimeZone.getTimeZone("GMT+00:00"));
-            allT = format.format(musicControl.getDuration());
-            allTime.setText(allT);
-
+    @Override
+    protected void onResume() {
+        if (musicService.mp.isPlaying()) {
+            playBtn.setImageResource(R.drawable.pause);
+            musicSituation = 1;
+        } else {
+            playBtn.setImageResource(R.drawable.start);
+            musicSituation = 0;
         }
 
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-        }
+        seekBar.setProgress(musicService.mp.getCurrentPosition());
+        seekBar.setMax(musicService.mp.getDuration());
+        handler.post(runnable);
+        super.onResume();
     }
 
     @Override
@@ -164,8 +163,13 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
                 }
                 break;
             case R.id.player_main_btn:
-                musicControl.play();
-                updatePlayImage();
+                musicService.playOrPause();
+                break;
+            case R.id.last_music:
+                musicService.preMusic();
+                break;
+            case R.id.next_music:
+                musicService.nextMusic();
                 break;
             default:
         }
@@ -189,43 +193,6 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
         }
     }
 
-    //更新进度条
-    private void updateProgress() {
-        format.setTimeZone(TimeZone.getTimeZone("GMT+00:00"));
-        currentT = format.format(musicControl.getCurrentPosition());
-        currentTime.setText(currentT);
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        int currentPosition = musicControl.getCurrentPosition();
-                        seekBar.setProgress(currentPosition);
-                        //使用Handler每500毫秒更新一次进度条
-                        handler.sendEmptyMessageDelayed(UPDATE_PROGRESS, 1000);
-                    }
-                });
-            }
-        }).start();
-    }
-
-    //更新图片
-    public void updatePlayImage() {
-        if (musicControl.isPlaying()) {
-            playBtn.setImageResource(R.drawable.pause);
-            musicSituation = 1;
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    handler.sendEmptyMessage(UPDATE_PROGRESS);
-                }
-            }).start();
-        } else {
-            playBtn.setImageResource(R.drawable.start);
-            musicSituation = 0;
-        }
-    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -238,28 +205,11 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
         return true;
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        //进入到界面后开始更新进度条
-        if (musicControl != null) {
-            format.setTimeZone(TimeZone.getTimeZone("GMT+00:00"));
-            currentT = format.format(musicControl.getCurrentPosition());
-            currentTime.setText(currentT);
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    handler.sendEmptyMessage(UPDATE_PROGRESS);
-                }
-            }).start();
-        }
-    }
 
     @Override
-    protected void onDestroy() {
+    public void onDestroy() {
+        unbindService(sc);
         super.onDestroy();
-        unbindService(conn);
-        stopService(intent3);
     }
 
     @Override
