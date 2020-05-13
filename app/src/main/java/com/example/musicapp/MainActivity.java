@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private Dialog bottomDialog;//定义底部弹出菜单
 
-    private int userSituation = 0, musicSituation = 0, returnPicId; //0:未登录、未播放 1：已登录，播放中
+    public int userSituation = 0, musicSituation = 0, returnPicId;//0:未登录、未播放 1：已登录，播放中
 
     private String returnUserNo, returnColorsName = "blue";
 
@@ -195,6 +195,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         //存页面实例
         fragmentList = new ArrayList<>();
+
         fragmentList.add(new FirstLayout());
         fragmentList.add(new SecondLayout());
 

@@ -1,9 +1,12 @@
 package com.example.musicapp.adapter;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -59,7 +62,36 @@ public class UserMusicListAdapter extends RecyclerView.Adapter<UserMusicListAdap
                 mContext.startActivity(intent);
             }
         });
+
+        holder.cardView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                final int position = holder.getAdapterPosition();
+                new AlertDialog.Builder(view.getContext()).setTitle("此操作将会删除歌单")
+                        .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                //按下确定键后的事件
+                                removeData(position);
+                            }
+                        }).setNegativeButton("取消",null).show();
+                Log.e("OOO",""+position);
+                return true;
+            }
+        });
         return holder;
+    }
+
+    public void addData(int position, String name, int imageId) {
+        RecMusicList recMusicList = new RecMusicList(name, imageId);
+        mMusicList.add(recMusicList);
+        notifyItemInserted(position);
+    }
+
+
+    public void removeData(int position) {
+        mMusicList.remove(position);
+        notifyItemRemoved(position);
     }
 
     @Override

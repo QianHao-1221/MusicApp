@@ -17,7 +17,6 @@ import com.example.musicapp.db.RecMusicList;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 
 public class FirstLayout extends Fragment {
@@ -91,7 +90,6 @@ public class FirstLayout extends Fragment {
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        initMusicList();
                         adapter.notifyDataSetChanged();
                         swipeRefreshLayout.setRefreshing(false);
                     }
@@ -102,10 +100,8 @@ public class FirstLayout extends Fragment {
 
     private void initMusicList() {
         recMusicLists.clear();
-        for (int i = 0; i < 50; i++) {
-            Random random = new Random();
-            int index = random.nextInt(musicList.length);
-            recMusicLists.add(musicList[index]);
+        for (int i = 0; i < musicList.length; i++) {
+            recMusicLists.add(musicList[i]);
         }
     }
 }
