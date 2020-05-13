@@ -1,7 +1,6 @@
 package com.example.musicapp.layout;
 
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -14,7 +13,6 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
 
-import com.example.musicapp.BuildNewListActivity;
 import com.example.musicapp.R;
 import com.example.musicapp.adapter.UserMusicListAdapter;
 import com.example.musicapp.db.RecMusicList;
@@ -65,10 +63,24 @@ public class SecondLayout extends Fragment {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 //按下确定键后的事件
-//                                adapter.addData(0,editText.getText().toString(),R.drawable.duck1);
-                                startActivity(new Intent(view.getContext(), BuildNewListActivity.class));
+                                adapter.addData(0, editText.getText().toString(), R.drawable.duck1);
                             }
-                        }).setNegativeButton("取消",null).show();
+                        }).setNegativeButton("取消", null).show();
+            }
+        });
+
+        adapter.setLongClickListener(new UserMusicListAdapter.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(final int position) {
+                new AlertDialog.Builder(view.getContext()).setTitle("此操作将会删除歌单")
+                        .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                //按下确定键后的事件
+                                adapter.removeData(position);
+                            }
+                        }).setNegativeButton("取消", null).show();
+                return true;
             }
         });
 
