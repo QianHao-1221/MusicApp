@@ -69,6 +69,7 @@ public class SecondLayout extends Fragment {
             }
         });
 
+        //长按事件
         adapter.setLongClickListener(new UserMusicListAdapter.OnLongClickListener() {
             @Override
             public boolean onLongClick(final int position) {

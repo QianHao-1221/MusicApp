@@ -69,7 +69,7 @@ public class UserMusicListAdapter extends RecyclerView.Adapter<UserMusicListAdap
         mLongClickListener = longClickListener;
     }
 
-    public interface OnLongClickListener{
+    public interface OnLongClickListener {
         boolean onLongClick(int position);
     }
 
