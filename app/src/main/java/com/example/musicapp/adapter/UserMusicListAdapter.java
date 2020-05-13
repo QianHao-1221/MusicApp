@@ -86,10 +86,11 @@ public class UserMusicListAdapter extends RecyclerView.Adapter<UserMusicListAdap
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, final int position) {
+    public void onBindViewHolder(final ViewHolder holder, final int position) {
         holder.cardView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View view) {
+                int position = holder.getAdapterPosition();
                 return mLongClickListener.onLongClick(position);
             }
         });
