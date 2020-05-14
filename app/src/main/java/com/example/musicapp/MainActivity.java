@@ -78,6 +78,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private NavigationView navView;
 
+    private OnToFragmentListener onToFragmentListener;
+
+    public interface OnToFragmentListener{
+        void toFragment(String value);
+    }
+
+    public void setOnToFragmentListener(OnToFragmentListener listener){
+        this.onToFragmentListener = listener;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -345,6 +355,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                         initColor(userSituation, returnColorsName, 2);
                                         customViewPager.setCurrentItem(1);//初始页面
                                         actionBar.setTitle("我的");
+                                        onToFragmentListener.toFragment(returnUserNo);
                                     }
                                 }
                             });
