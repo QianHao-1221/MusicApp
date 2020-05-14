@@ -6,7 +6,7 @@ import org.litepal.crud.LitePalSupport;
  * Created by 贺宁昊 on 2020/5/14.
  */
 
-public class MusicList extends LitePalSupport {
+public class MyMusicList extends LitePalSupport {
 
     private String user_no;
 

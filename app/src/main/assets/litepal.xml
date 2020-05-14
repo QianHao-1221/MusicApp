@@ -7,6 +7,6 @@
     <list>
         <mapping class="com.example.musicapp.db.User"></mapping>
         <mapping class="com.example.musicapp.db.Music"></mapping>
-        <mapping class="com.example.musicapp.db.MusicList"></mapping>
+        <mapping class="com.example.musicapp.db.MyMusicList"></mapping>
     </list>
 </litepal>

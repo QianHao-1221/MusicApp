@@ -20,8 +20,10 @@ import android.widget.Toast;
 import com.example.musicapp.MainActivity;
 import com.example.musicapp.R;
 import com.example.musicapp.adapter.UserMusicListAdapter;
-import com.example.musicapp.db.MusicList;
+import com.example.musicapp.db.MyMusicList;
 import com.example.musicapp.db.RecMusicList;
+
+import org.litepal.LitePal;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,12 +34,7 @@ public class SecondLayout extends Fragment implements MainActivity.OnToFragmentL
 
     private Context mContext;
 
-    private RecMusicList[] musicList = {
-            new RecMusicList("Music1", R.drawable.note), new RecMusicList("Music2", R.drawable.test),
-            new RecMusicList("Music3", R.drawable.test), new RecMusicList("Music4", R.drawable.test),
-            new RecMusicList("Music5", R.drawable.test), new RecMusicList("Music6", R.drawable.test),
-            new RecMusicList("Music7", R.drawable.test), new RecMusicList("Music8", R.drawable.test),
-            new RecMusicList("Music9", R.drawable.test), new RecMusicList("Music10", R.drawable.test)};
+    private RecMusicList[] musicList;
 
     private List<RecMusicList> recMusicLists = new ArrayList<>();
 
@@ -69,29 +66,32 @@ public class SecondLayout extends Fragment implements MainActivity.OnToFragmentL
             @Override
             public void onClick(final View view) {
                 final EditText editText = new EditText(view.getContext());
-                Log.e("OK","kkkk"+userNo);
-                new AlertDialog.Builder(view.getContext()).setTitle("新建歌单")
-                        .setView(editText)
-                        .setPositiveButton("确定", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                //按下确定键后的事件
-                                if ("0".equals(userNo)) {
-                                    Toast.makeText(view.getContext(), "尚未登录!", Toast.LENGTH_SHORT).show();
-                                } else {
-                                    adapter.addData(0, editText.getText().toString(), R.drawable.duck1);
-                                    new Thread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            MusicList musicList = new MusicList();
-                                            musicList.setList_name(editText.getText().toString());
-                                            musicList.setUser_no(userNo);
-                                            musicList.save();
-                                        }
-                                    }).start();
+                if (!"0".equals(userNo)) {
+                    new AlertDialog.Builder(view.getContext()).setTitle("新建歌单")
+                            .setView(editText)
+                            .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    //按下确定键后的事件
+                                    if ("".equals(editText.getText().toString())) {
+                                        Toast.makeText(view.getContext(), "歌单名不能为空", Toast.LENGTH_SHORT).show();
+                                    } else {
+                                        adapter.addData(0, editText.getText().toString(), R.drawable.note);
+                                        new Thread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                MyMusicList myMusicList = new MyMusicList();
+                                                myMusicList.setList_name(editText.getText().toString());
+                                                myMusicList.setUser_no(userNo);
+                                                myMusicList.save();
+                                            }
+                                        }).start();
+                                    }
                                 }
-                            }
-                        }).setNegativeButton("取消", null).show();
+                            }).setNegativeButton("取消", null).show();
+                } else {
+                    Toast.makeText(view.getContext(), "您还没有登录", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
@@ -144,9 +144,20 @@ public class SecondLayout extends Fragment implements MainActivity.OnToFragmentL
 
     private void initMusicList() {
         recMusicLists.clear();
-        for (int i = 0; i < musicList.length; i++) {
-            recMusicLists.add(musicList[i]);
-        }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                List<MyMusicList> lists = LitePal.where("user_no = ?",userNo).find(MyMusicList.class);
+                for (MyMusicList m : lists){
+                    RecMusicList r = new RecMusicList(m.getList_name(),R.drawable.note);
+                    Log.e("OK",m.getList_name());
+//                    recMusicLists.add(r);
+                }
+            }
+        }).start();
+//        for (int i = 0; i < musicList.length; i++) {
+//            recMusicLists.add(musicList[i]);
+//        }
     }
 
     @Override
