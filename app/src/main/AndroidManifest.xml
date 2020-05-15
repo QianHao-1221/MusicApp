@@ -38,9 +38,6 @@
             android:name=".ColorSelectionActivity"
             android:label="" />
         <activity
-            android:name=".MessageActivity"
-            android:label="" />
-        <activity
             android:name=".MusicPlayerActivity"
             android:label="" />
         <activity
@@ -52,13 +49,13 @@
         <activity android:name=".UserMusicListActivity" />
         <activity
             android:name=".FavActivity"
-            android:label="喜欢" />
+            android:label="我喜欢" />
         <activity
             android:name=".LocalMusicActivity"
             android:label="本地歌曲" />
         <activity
             android:name=".BuyActivity"
-            android:label="已购" />
+            android:label="历史记录" />
         <activity android:name=".UpdateNameActivity" />
         <activity android:name=".UpdatePasswordActivity" />
 

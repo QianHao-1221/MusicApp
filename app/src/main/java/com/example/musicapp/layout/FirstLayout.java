@@ -14,20 +14,15 @@ import android.view.ViewGroup;
 import com.example.musicapp.R;
 import com.example.musicapp.adapter.RecMusicListAdapter;
 import com.example.musicapp.db.RecMusicList;
+import com.example.musicapp.db.SysRecMusicList;
+
+import org.litepal.LitePal;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
 public class FirstLayout extends Fragment {
-
-    private RecMusicList[] musicList = {
-            new RecMusicList("Music1", R.drawable.test), new RecMusicList("Music1", R.drawable.test),
-            new RecMusicList("Music1", R.drawable.test), new RecMusicList("Music1", R.drawable.test),
-            new RecMusicList("Music1", R.drawable.test), new RecMusicList("Music1", R.drawable.test),
-            new RecMusicList("Music1", R.drawable.test), new RecMusicList("Music1", R.drawable.test),
-            new RecMusicList("Music1", R.drawable.test), new RecMusicList("Music1", R.drawable.test)
-    };
 
     private List<RecMusicList> recMusicLists = new ArrayList<>();
 
@@ -100,8 +95,20 @@ public class FirstLayout extends Fragment {
 
     private void initMusicList() {
         recMusicLists.clear();
-        for (int i = 0; i < musicList.length; i++) {
-            recMusicLists.add(musicList[i]);
-        }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        List<SysRecMusicList> lists = LitePal.order("list_name").find(SysRecMusicList.class);
+                        for (SysRecMusicList sysRecMusicList : lists) {
+                            RecMusicList recMusicList = new RecMusicList(sysRecMusicList.getList_name(),sysRecMusicList.getImageId());
+                            recMusicLists.add(recMusicList);
+                        }
+                    }
+                });
+            }
+        }).start();
     }
 }

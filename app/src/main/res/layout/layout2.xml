@@ -81,14 +81,14 @@
                     android:id="@+id/buy_pic"
                     android:layout_width="30dp"
                     android:layout_height="30dp"
-                    android:src="@drawable/buy_black" />
+                    android:src="@drawable/history" />
 
                 <TextView
                     android:id="@+id/buy_text"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="已购"
+                    android:text="历史记录"
                     android:textColor="#111"
                     android:textSize="15dp" />
 

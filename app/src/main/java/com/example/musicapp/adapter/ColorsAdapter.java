@@ -49,6 +49,7 @@ public class ColorsAdapter extends RecyclerView.Adapter<PicAdapter.ViewHolder> {
                 //获取名字主要是，然后传给ColorSelectionActivity，然后再传给MainActivity
                 colorSelection.getColorsName(colors);
 
+                //获取ColorSelectionActivity，调用它的的finish方法
                 colorSelection = (ColorSelectionActivity) v.getContext();
                 colorSelection.finish();
             }

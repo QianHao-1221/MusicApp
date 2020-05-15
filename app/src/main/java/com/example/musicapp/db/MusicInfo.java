@@ -6,7 +6,7 @@ import org.litepal.crud.LitePalSupport;
  * Created by 贺宁昊 on 2020/5/11.
  */
 
-public class Music extends LitePalSupport {
+public class MusicInfo extends LitePalSupport {
 
     private String music_name;
 
@@ -16,17 +16,7 @@ public class Music extends LitePalSupport {
 
     private int image_no;
 
-    private String music_local;
-
     private String lry_local;
-
-    public String getMusic_local() {
-        return music_local;
-    }
-
-    public void setMusic_local(String music_local) {
-        this.music_local = music_local;
-    }
 
     public String getLry_local() {
         return lry_local;

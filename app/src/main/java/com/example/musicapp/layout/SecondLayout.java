@@ -9,7 +9,6 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,8 +33,6 @@ public class SecondLayout extends Fragment implements MainActivity.OnToFragmentL
 
     private Context mContext;
 
-    private RecMusicList[] musicList;
-
     private List<RecMusicList> recMusicLists = new ArrayList<>();
 
     private UserMusicListAdapter adapter;
@@ -47,7 +44,7 @@ public class SecondLayout extends Fragment implements MainActivity.OnToFragmentL
     private String userNo = "0";
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(final LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.layout2, container, false);
 
         initMusicList();
@@ -80,6 +77,7 @@ public class SecondLayout extends Fragment implements MainActivity.OnToFragmentL
                                         new Thread(new Runnable() {
                                             @Override
                                             public void run() {
+                                                //歌单信息存到数据库
                                                 MyMusicList myMusicList = new MyMusicList();
                                                 myMusicList.setList_name(editText.getText().toString());
                                                 myMusicList.setUser_no(userNo);
@@ -104,7 +102,8 @@ public class SecondLayout extends Fragment implements MainActivity.OnToFragmentL
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 //按下确定键后的事件
-                                adapter.removeData(position);
+                                adapter.removeData(position, userNo);
+                                Toast.makeText(view.getContext(), "删除成功！", Toast.LENGTH_SHORT).show();
                             }
                         }).setNegativeButton("取消", null).show();
                 return true;
@@ -126,14 +125,10 @@ public class SecondLayout extends Fragment implements MainActivity.OnToFragmentL
         new Thread(new Runnable() {
             @Override
             public void run() {
-                try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
+                        initMusicList();
                         adapter.notifyDataSetChanged();
                         swipeRefreshLayout.setRefreshing(false);
                     }
@@ -147,19 +142,21 @@ public class SecondLayout extends Fragment implements MainActivity.OnToFragmentL
         new Thread(new Runnable() {
             @Override
             public void run() {
-                List<MyMusicList> lists = LitePal.where("user_no = ?",userNo).find(MyMusicList.class);
-                for (MyMusicList m : lists){
-                    RecMusicList r = new RecMusicList(m.getList_name(),R.drawable.note);
-                    Log.e("OK",m.getList_name());
-//                    recMusicLists.add(r);
-                }
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        List<MyMusicList> lists = LitePal.where("user_no = ?", userNo).order("list_name").find(MyMusicList.class);
+                        for (MyMusicList m : lists) {
+                            adapter.addData(0, m.getList_name(), R.drawable.note);
+                        }
+                    }
+                });
             }
         }).start();
-//        for (int i = 0; i < musicList.length; i++) {
-//            recMusicLists.add(musicList[i]);
-//        }
     }
 
+    //MainActivity向Fragment传递数据的方式
+    //底下四个都是关键
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);

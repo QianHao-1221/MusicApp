@@ -12,9 +12,11 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.example.musicapp.R;
-import com.example.musicapp.RecMusicListInfoActivity;
 import com.example.musicapp.UserMusicListActivity;
+import com.example.musicapp.db.MyMusicList;
 import com.example.musicapp.db.RecMusicList;
+
+import org.litepal.LitePal;
 
 import java.util.List;
 
@@ -25,6 +27,8 @@ public class UserMusicListAdapter extends RecyclerView.Adapter<UserMusicListAdap
     private List<RecMusicList> mMusicList;
 
     private OnLongClickListener mLongClickListener;
+
+    private RecMusicList recMusicList;
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         CardView cardView;
@@ -54,10 +58,10 @@ public class UserMusicListAdapter extends RecyclerView.Adapter<UserMusicListAdap
             @Override
             public void onClick(View view) {
                 int position = holder.getAdapterPosition();
-                RecMusicList recMusicList = mMusicList.get(position);
+                recMusicList = mMusicList.get(position);
                 Intent intent = new Intent(mContext, UserMusicListActivity.class);
-                intent.putExtra(RecMusicListInfoActivity.MUSIC_NAME, recMusicList.getName());
-                intent.putExtra(RecMusicListInfoActivity.MUSIC_IMAGE_ID, recMusicList.getImageId());
+                intent.putExtra(UserMusicListActivity.MUSIC_NAME, recMusicList.getName());
+                intent.putExtra(UserMusicListActivity.MUSIC_IMAGE_ID, recMusicList.getImageId());
                 mContext.startActivity(intent);
             }
         });
@@ -65,10 +69,12 @@ public class UserMusicListAdapter extends RecyclerView.Adapter<UserMusicListAdap
         return holder;
     }
 
+    //接口回调
     public void setLongClickListener(OnLongClickListener longClickListener) {
         mLongClickListener = longClickListener;
     }
 
+    //接口
     public interface OnLongClickListener {
         boolean onLongClick(int position);
     }
@@ -79,8 +85,14 @@ public class UserMusicListAdapter extends RecyclerView.Adapter<UserMusicListAdap
         notifyItemInserted(position);
     }
 
-
-    public void removeData(int position) {
+    public void removeData(int position, final String userNo) {
+        recMusicList = mMusicList.get(position);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                LitePal.deleteAll(MyMusicList.class, "user_no = ? and list_name = ?", userNo, recMusicList.getName());
+            }
+        }).start();
         mMusicList.remove(position);
         notifyItemRemoved(position);
     }

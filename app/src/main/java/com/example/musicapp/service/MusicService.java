@@ -6,14 +6,18 @@ import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Random;
+
 /**
  * Created by West on 2015/11/10.
  */
 public class MusicService extends Service {
 
-    private String[] musicDir = new String[]{};
+    private ArrayList<String> musicDir = new ArrayList<>();
 
-    private int musicIndex = 0;
+    private int musicIndex = -1;
 
     public final IBinder binder = new MyBinder();
 
@@ -25,7 +29,7 @@ public class MusicService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        musicDir = intent.getStringArrayExtra("data");
+        musicDir = (ArrayList<String>) intent.getSerializableExtra("data");
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -33,12 +37,26 @@ public class MusicService extends Service {
 
     public MusicService() {
         try {
-            mp.setDataSource("/storage/emulated/legacy/music.mp3");
+            mp.setDataSource("/storage/emulated/0/music.mp3");
             //mp.setDataSource(Environment.getDataDirectory().getAbsolutePath()+"/You.mp3");
             mp.prepare();
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    //外部访问此方法，主要用来播放歌曲
+    public void play(String path) {
+        try {
+            mp.reset();
+            mp.setDataSource(path);
+            mp.prepare();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        mp.seekTo(0);
+        mp.start();
+        mp.setLooping(true);
     }
 
     public void playOrPause() {
@@ -49,24 +67,12 @@ public class MusicService extends Service {
         }
     }
 
-    public void stop() {
-        if (mp != null) {
-            mp.stop();
-            try {
-                mp.prepare();
-                mp.seekTo(0);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
     public void nextMusic() {
-        if (mp != null && musicIndex < musicDir.length - 1) {
+        if (mp != null && musicIndex < musicDir.size() - 1) {
             mp.stop();
             try {
                 mp.reset();
-                mp.setDataSource(musicDir[musicIndex + 1]);
+                mp.setDataSource(musicDir.get(musicIndex + 1));
                 musicIndex++;
                 mp.prepare();
                 mp.seekTo(0);
@@ -82,8 +88,26 @@ public class MusicService extends Service {
             mp.stop();
             try {
                 mp.reset();
-                mp.setDataSource(musicDir[musicIndex - 1]);
+                mp.setDataSource(musicDir.get(musicIndex - 1));
                 musicIndex--;
+                mp.prepare();
+                mp.seekTo(0);
+                mp.start();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    //随机播放
+    public void noMusic() {
+        if (mp != null && musicIndex > 0) {
+            mp.stop();
+            try {
+                mp.reset();
+                Random random = new Random();
+                int index = random.nextInt(musicDir.size());
+                mp.setDataSource(musicDir.get(index));
                 mp.prepare();
                 mp.seekTo(0);
                 mp.start();
@@ -108,4 +132,5 @@ public class MusicService extends Service {
     public IBinder onBind(Intent intent) {
         return binder;
     }
+
 }

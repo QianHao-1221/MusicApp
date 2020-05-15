@@ -1,0 +1,5 @@
+1.不相关的两个Activity之间，利用SharedPreferences来共享数据；MainActivity和RecMusicListInfoActivity
+2.Fragment和Activity的接口回调
+3.长按删除和新建歌单，长按的接口回调，RecycleView的增删
+4.当时为了给选择头像和选择颜色为了给MainActivity传值，先在adapter里获取值然后传给它对应的Activity然后再用intent传回去
+5.点击音乐就播放，FLBAdapter里有，直接调用的MusicService里的play()方法，在adapter里获取路径，然后利用play传过去

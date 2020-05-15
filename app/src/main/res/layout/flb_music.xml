@@ -37,19 +37,6 @@
                 android:textColor="#111"
                 android:textSize="13dp" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="—"
-                android:textColor="#111" />
-
-            <TextView
-                android:id="@+id/page_name"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:textColor="#111"
-                android:textSize="13dp" />
         </LinearLayout>
 
     </LinearLayout>

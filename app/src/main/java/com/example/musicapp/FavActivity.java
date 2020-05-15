@@ -1,5 +1,6 @@
 package com.example.musicapp;
 
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
@@ -13,25 +14,22 @@ import android.view.View;
 
 import com.example.musicapp.adapter.FLBAdapter;
 import com.example.musicapp.db.FLBMusic;
+import com.example.musicapp.db.MyFav;
+
+import org.litepal.LitePal;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class FavActivity extends AppCompatActivity {
 
-    private FLBMusic[] flbMusics = {
-            new FLBMusic("可惜没如果", "林俊杰", "可惜啊"), new FLBMusic("子在西元前", "周杰伦", "爱在西亚"),
-            new FLBMusic("Can We Kiss Forever", "JBSD", "WWWW"), new FLBMusic("较简洁", "是", "是"),
-            new FLBMusic("12313", "123", "可惜啊123"),new FLBMusic("可惜没如果", "林俊杰", "可惜啊"),
-            new FLBMusic("和欢呼声", "林我去俊杰", "我去"),new FLBMusic("大噶", "爱所", "爱所撒"),
-            new FLBMusic("给", "大概", "傻瓜"),new FLBMusic("可惜没爱所是如果", "而我却", "我去"),
-            new FLBMusic(" 分数", "大水缸", "大水缸"),new FLBMusic("可惜没撒撒如果", "我去", "儿媳妇"),
-            new FLBMusic("可惜没而且额提到过如果", "神功大", "可惜啊"),new FLBMusic("撒", "我去", "可惜啊"),
-            new FLBMusic("前额头铁", " 而且", "请问他"),new FLBMusic("给都是", "去微软", "额我确认"),};
-
     private List<FLBMusic> flbMusicList = new ArrayList<>();
 
     private FLBAdapter adapter;
+
+    private String userNo;
+
+    private int userSituation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,9 +38,13 @@ public class FavActivity extends AppCompatActivity {
 
         initMusicList();
 
+        SharedPreferences preferences = getSharedPreferences("data", MODE_PRIVATE);
+        userNo = preferences.getString("userNo", "");
+        userSituation = preferences.getInt("userSituation", 0);
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        ActionBar actionBar = getSupportActionBar();
+        final ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setHomeAsUpIndicator(R.drawable.back);
             actionBar.setDisplayHomeAsUpEnabled(true);
@@ -67,13 +69,33 @@ public class FavActivity extends AppCompatActivity {
                 searchView.setIconified(false);
             }
         });
+
+        adapter.setLongClickListener(new FLBAdapter.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(int position) {
+                adapter.removeFromFav(position, userNo);
+                return true;
+            }
+        });
     }
 
     private void initMusicList() {
         flbMusicList.clear();
-        for (int i = 0; i < flbMusics.length; i++) {
-            flbMusicList.add(flbMusics[i]);
-        }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        List<MyFav> lists = LitePal.order("music_name").find(MyFav.class);
+                        for (MyFav myFav : lists) {
+                            FLBMusic flbMusic = new FLBMusic(myFav.getMusic_name(), myFav.getSinger_name(), myFav.getPage_name());
+                            flbMusicList.add(flbMusic);
+                        }
+                    }
+                });
+            }
+        }).start();
     }
 
     @Override

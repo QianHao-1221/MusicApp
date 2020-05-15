@@ -4,6 +4,7 @@ import android.animation.ObjectAnimator;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
@@ -80,11 +81,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private OnToFragmentListener onToFragmentListener;
 
-    public interface OnToFragmentListener{
+    private SharedPreferences.Editor editor;
+
+    public interface OnToFragmentListener {
         void toFragment(String value);
     }
 
-    public void setOnToFragmentListener(OnToFragmentListener listener){
+    public void setOnToFragmentListener(OnToFragmentListener listener) {
         this.onToFragmentListener = listener;
     }
 
@@ -174,12 +177,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             overridePendingTransition(R.anim.slide_in_right, R.anim.bottom_silent);
                         }
                         break;
-                    case R.id.nav_message:
-                        Intent intent = new Intent(MainActivity.this, MessageActivity.class);
-                        intent.putExtra("userSituation", userSituation);
-                        startActivity(intent);
-                        overridePendingTransition(R.anim.slide_in_right, R.anim.bottom_silent);
-                        break;
                     case R.id.update_pwd:
                         if (userSituation == 0) {
                             Toast.makeText(MainActivity.this, "您还没有登陆", Toast.LENGTH_SHORT).show();
@@ -208,6 +205,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         fragmentList.add(new FirstLayout());
         fragmentList.add(new SecondLayout());
+
+        saveData();
 
         customViewPager.setAdapter(new MyViewPagerAdapter(getSupportFragmentManager(), fragmentList));
         initColor(userSituation, returnColorsName, 2);
@@ -356,6 +355,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                         customViewPager.setCurrentItem(1);//初始页面
                                         actionBar.setTitle("我的");
                                         onToFragmentListener.toFragment(returnUserNo);
+
+                                        //利用SharedPerferences暂时存储一下用户的id和状态
+                                        editor = getSharedPreferences("data", MODE_PRIVATE).edit();
+                                        editor.putString("userNo", returnUserNo);
+                                        editor.putInt("userSituation", userSituation);
+                                        editor.apply();
                                     }
                                 }
                             });
@@ -453,6 +458,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     imageView.setImageResource(R.drawable.nologin);
                     userSituation = 0;
                     Toast.makeText(MainActivity.this, "您已退出登录", Toast.LENGTH_SHORT).show();
+                    //清空SharedPreFerences中的数据
+                    editor.clear();
+                    editor.commit();
                     initColor(0, returnColorsName, 2);
                     actionBar.setTitle("我的");
                     customViewPager.setCurrentItem(1);//初始页面
@@ -487,8 +495,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 bottomDialog.cancel();
                 break;
             case R.id.fav_music:
-                startActivity(new Intent(MainActivity.this, FavActivity.class));
-                overridePendingTransition(R.anim.slide_in_right, R.anim.bottom_silent);
+                if (userSituation == 0) {
+                    Toast.makeText(MainActivity.this, "登陆后查看", Toast.LENGTH_SHORT).show();
+                } else {
+                    startActivity(new Intent(MainActivity.this, FavActivity.class));
+                    overridePendingTransition(R.anim.slide_in_right, R.anim.bottom_silent);
+                }
                 break;
             case R.id.local_music:
                 startActivity(new Intent(MainActivity.this, LocalMusicActivity.class));
@@ -548,7 +560,53 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }).start();
     }
 
+    private void saveData() {
+//        SysRecMusicList sysRecMusicList = new SysRecMusicList();
+//        sysRecMusicList.setImageId(R.drawable.look);
+//        sysRecMusicList.updateAll("id = 8");
+//        sysRecMusicList.setList_name("今天你还有“鸭”力吗？");
+//        sysRecMusicList.setImageId(R.drawable.duck1);
+//
+//        sysRecMusicList.setList_name("听听这个能让你放松很多");
+//        sysRecMusicList.setImageId(R.drawable.hug);
+//
+//        sysRecMusicList.setList_name("国外流行乐曲大集合");
+//        sysRecMusicList.setImageId(R.drawable.test);
+//
+//        sysRecMusicList.setList_name("国内流行音乐");
+//        sysRecMusicList.setImageId(R.drawable.qfl);
+//
+//        sysRecMusicList.setList_name("听歌也吸猫");
+//        sysRecMusicList.setImageId(R.drawable.blackcat);
+//
+//        sysRecMusicList.setList_name("哈哈哈这是随便弄的");
+//        sysRecMusicList.setImageId(R.drawable.com);
+//
+//        sysRecMusicList.setList_name("毕设好累，听听这些歌放松一下吧！");
+//        sysRecMusicList.setImageId(R.drawable.heart);
+//
+//        sysRecMusicList.setList_name("看！");
+//        sysRecMusicList.setImageId(R.drawable.look);
+//
+//        sysRecMusicList.setList_name("不许困");
+//        sysRecMusicList.setImageId(R.drawable.no);
+//
+//        sysRecMusicList.setList_name("这“猫”也能吸！");
+//        sysRecMusicList.setImageId(R.drawable.panda);
+//
+//        sysRecMusicList.setList_name("疫情期间，注意距离");
+//        sysRecMusicList.setImageId(R.drawable.nohand);
+//
+//        sysRecMusicList.setList_name("王者荣耀必备单曲！");
+//        sysRecMusicList.setImageId(R.drawable.play);
+//
+//        sysRecMusicList.setList_name("这首歌好听到爆炸了");
+//        sysRecMusicList.setImageId(R.drawable.tuijian);
+//        sysRecMusicList.save();
+    }
+
     //点击两次退出程序
+
     public void exit() {
         if ((System.currentTimeMillis() - exitTime) > 2000) {
             Toast.makeText(MainActivity.this, "再按一次返回桌面", Toast.LENGTH_SHORT).show();
