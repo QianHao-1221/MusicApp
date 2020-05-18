@@ -37,14 +37,23 @@
     </LinearLayout>
 
     <View
-        android:layout_marginTop="5dp"
         android:layout_width="match_parent"
         android:layout_height="2dp"
+        android:layout_marginTop="5dp"
         android:background="#111" />
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/fav_recycle_view"
+    <android.support.v4.widget.SwipeRefreshLayout
+        android:id="@+id/swipe_refresh_fav"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:layout_marginBottom="50dp"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/fav_recycle_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </android.support.v4.widget.SwipeRefreshLayout>
 
 </LinearLayout>

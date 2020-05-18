@@ -61,16 +61,16 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                List<User> users = LitePal.where("user_no = ?", inputNo).find(User.class);
+                                List<User> users = LitePal.where("user_no = ?", inputNo).find(User.class);//根据用户输入的id查询user表中是否存在该账号
                                 if (users.size() == 0 || "".equals(inputNo)) {
                                     AlertDialog.Builder dialog = new AlertDialog.Builder(LoginActivity.this);
-                                    dialog.setTitle("提示");
-                                    dialog.setMessage("ID不存在！");
+                                    dialog.setTitle("提示");//设置弹窗标题
+                                    dialog.setMessage("ID不存在！");//设置弹窗内容
                                     dialog.setPositiveButton("确定", new DialogInterface.OnClickListener() {
                                         @Override
                                         public void onClick(DialogInterface dialogInterface, int i) {
-                                            userPasswordED.setText("");
-                                            userNoED.requestFocus();
+                                            userPasswordED.setText("");//id值清空
+                                            userNoED.requestFocus();//焦点设置在id框
                                         }
                                     });
                                     dialog.show();
@@ -90,12 +90,14 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                                         if (inputPassword.equals(user.getUser_password())) {
                                             userNo = user.getUser_no();
 
+                                            //获取用户id并返回
                                             Intent intent = new Intent();
                                             intent.putExtra("returnUserNo", userNo);
-
                                             setResult(RESULT_OK, intent);
-                                            LoginActivity.this.finish();
+
+                                            LoginActivity.this.finish();//关闭登录页面
                                         } else {
+                                            //密码输入错误执行此段代码
                                             AlertDialog.Builder dialog = new AlertDialog.Builder(LoginActivity.this);
                                             dialog.setTitle("提示");
                                             dialog.setMessage("密码输入错误！");

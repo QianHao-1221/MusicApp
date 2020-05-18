@@ -4,6 +4,7 @@ import android.database.Cursor;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
@@ -26,6 +27,8 @@ public class LocalMusicActivity extends AppCompatActivity {
     private FLBAdapter adapter;
 
     private String musicName, artist, packages;
+
+    private SwipeRefreshLayout swipeRefreshLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,11 +66,37 @@ public class LocalMusicActivity extends AppCompatActivity {
             }
         });
 
+        adapter.setLongClickListener(new FLBAdapter.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(int position) {
+                return false;
+            }
+        });
+
+        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_local);
+        swipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refreshRexMusicList();
+            }
+        });
     }
 
-    private void getLocalMusic() {
-
-
+    private void refreshRexMusicList() {
+        //下拉刷新操作
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        initMusicList();
+                        swipeRefreshLayout.setRefreshing(false);
+                    }
+                });
+            }
+        }).start();
     }
 
     private void initMusicList() {

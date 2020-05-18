@@ -51,6 +51,7 @@ public class UpdateNameActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         userNo = intent.getStringExtra("userNo");
+        userName = intent.getStringExtra("userName");
 
         newUserName = (EditText) findViewById(R.id.new_user_name);
 

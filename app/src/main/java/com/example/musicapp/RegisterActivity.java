@@ -174,9 +174,10 @@ public class RegisterActivity extends AppCompatActivity {
 
                                 code = CodeUtil.getInstance().getCode().toLowerCase();
 
-                                List<User> users = LitePal.where("user_no = ?", "" + inputNo).find(User.class);
+                                List<User> users = LitePal.where("user_no = ?", "" + inputNo).find(User.class);//先查询用户输入id是否已经注册
 
                                 if (users.size() != 0) {
+                                    //返回数组长度不为1，则表示已经注册过
                                     message.what = LIM_NO;
                                     handler.sendMessage(message);
                                 } else if ("".equals(inputName)) {
@@ -198,14 +199,15 @@ public class RegisterActivity extends AppCompatActivity {
                                     User regUser = new User();
                                     int id = 0;
 
-                                    regUser.setUser_no(inputNo);
-                                    regUser.setUser_name(inputName);
-                                    regUser.setUser_password(fstPassword);
-                                    regUser.setSuper_password(superPSW);
-                                    regUser.setPic_id(R.drawable.bean);
-                                    regUser.setCustom_color("blue");
-                                    regUser.setUser_level(1);
-                                    regUser.save();
+                                    //用户输入满足规则后
+                                    regUser.setUser_no(inputNo);//获取用户输入的id并存入user表
+                                    regUser.setUser_name(inputName);//获取用户输入的用户名称
+                                    regUser.setUser_password(fstPassword);//获取用户输入的密码
+                                    regUser.setSuper_password(superPSW);//获取用户输入的超级密码
+                                    regUser.setPic_id(R.drawable.bean);//用户注册时默认头像
+                                    regUser.setCustom_color("blue");//用户注册时默认个性化颜色
+                                    regUser.setUser_level(1);//用户的等级
+                                    regUser.save();//存入数据库
 
                                     //获取注册用户的数量+1
                                     Cursor c = LitePal.findBySQL("select * from user");

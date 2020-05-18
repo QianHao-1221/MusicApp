@@ -62,7 +62,12 @@
         <service
             android:name=".service.MusicService"
             android:exported="true" />
+        <service
+            android:name=".service.DownloadService"
+            android:enabled="true"
+            android:exported="true" />
 
+        <activity android:name=".CommentActivity"></activity>
     </application>
 
 </manifest>

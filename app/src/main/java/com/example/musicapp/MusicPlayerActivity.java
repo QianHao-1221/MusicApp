@@ -18,20 +18,26 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.musicapp.db.History;
+import com.example.musicapp.db.MusicInfo;
 import com.example.musicapp.service.MusicService;
+
+import org.litepal.LitePal;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 public class MusicPlayerActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private ImageView playWay, lastMusic, playBtn, nextMusic;
+    private ImageView playWay, lastMusic, playBtn, nextMusic, musicImg;
 
     private int pickWay = 1;
 
-    public Intent intent;
+    public Intent intent, intent2;
 
-    private int musicSituation = 0, playwaySituation = 1;//0:未播放 1:开始播放
+    private int playwaySituation = 1, flag = 0, userSituation = 0;//0:未播放 1:开始播放
 
     private TextView currentTime, allTime, music, singer;
 
@@ -41,11 +47,7 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
 
     private SimpleDateFormat time = new SimpleDateFormat("m:ss");
 
-    public void stop() {
-        stopService(intent);
-    }
-
-    private String uri, musicName, artist;
+    private String uri, musicName, artist, userNo;
 
     private ServiceConnection sc = new ServiceConnection() {
         @Override
@@ -132,8 +134,24 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
 
         musicService = new MusicService();
 
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setHomeAsUpIndicator(R.drawable.player_close);
+            actionBar.setDisplayHomeAsUpEnabled(true);
+        }
+
         bindServiceConnection();
 
+        intent2 = getIntent();
+        userNo = intent2.getStringExtra("userNo");
+        playwaySituation = intent2.getIntExtra("playWay", 1);
+        pickWay = intent2.getIntExtra("pickWay", 1);
+        flag = intent2.getIntExtra("flag", 1);
+        userSituation = intent2.getIntExtra("userSituation", 0);
+
+        musicImg = (ImageView) findViewById(R.id.player_song_pic);
         music = (TextView) findViewById(R.id.player_song_name);
         singer = (TextView) findViewById(R.id.player_singer_name);
 
@@ -154,25 +172,18 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
         currentTime = (TextView) findViewById(R.id.current_time);
         allTime = (TextView) findViewById(R.id.all_time);
 
-
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setHomeAsUpIndicator(R.drawable.player_close);
-            actionBar.setDisplayHomeAsUpEnabled(true);
-        }
-
+        PlayWay();
+        setPlayWay(pickWay);
+        change();
     }
 
     @Override
     protected void onResume() {
-        if (musicService.mp.isPlaying()) {
-            playBtn.setImageResource(R.drawable.pause);
-            musicSituation = 1;
+        change();
+        if (!musicService.mp.isPlaying()) {
+            playBtn.setImageResource(R.drawable.start);
         } else {
             playBtn.setImageResource(R.drawable.start);
-            musicSituation = 0;
         }
 
         seekBar.setProgress(musicService.mp.getCurrentPosition());
@@ -183,13 +194,14 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
 
     @Override
     public void onClick(View view) {
+        change();
         switch (view.getId()) {
             case R.id.player_song_pic:
                 startActivityForResult(new Intent(MusicPlayerActivity.this, LyricActivity.class), 1);
                 overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
                 break;
             case R.id.play_way:
-                if (pickWay == 1) {
+                if (pickWay == 1 || pickWay == 0) {
                     setPlayWay(2);
                     pickWay = 2;
                 } else if (pickWay == 2) {
@@ -206,37 +218,151 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
             case R.id.last_music:
                 musicService.preMusic();
                 PlayWay();
+                seekBar.setMax(musicService.mp.getDuration());
                 break;
             case R.id.next_music:
+                flag = 1;
                 musicService.nextMusic();
                 PlayWay();
+                seekBar.setMax(musicService.mp.getDuration());
                 break;
+            case R.id.comment:
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        List<MusicInfo> musicInfos = LitePal.where("music_package = ?", musicService.currentPath()).find(MusicInfo.class);
+                        for (MusicInfo musicInfo : musicInfos) {
+                            Intent intent = new Intent(MusicPlayerActivity.this, CommentActivity.class);
+                            intent.putExtra("userSituation", userSituation);
+                            intent.putExtra("musicId", musicInfo.getId());
+                            startActivity(intent);
+                            overridePendingTransition(R.anim.bottom_in, R.anim.bottom_silent);
+                        }
+                    }
+                }).start();
+
             default:
         }
     }
 
     private void setPlayWay(int way) {
+        change();
         switch (way) {
+            case 0:
             case 1:
                 playwaySituation = 1;
                 playWay.setImageResource(R.drawable.shunxu);
                 PlayWay();
-                Toast.makeText(MusicPlayerActivity.this, "顺序播放", Toast.LENGTH_SHORT).show();
                 break;
             case 2:
                 playwaySituation = 2;
                 playWay.setImageResource(R.drawable.suiji);
                 PlayWay();
-                Toast.makeText(MusicPlayerActivity.this, "随机播放", Toast.LENGTH_SHORT).show();
                 break;
             case 3:
                 playwaySituation = 3;
                 playWay.setImageResource(R.drawable.danqu);
                 PlayWay();
-                Toast.makeText(MusicPlayerActivity.this, "单曲循环", Toast.LENGTH_SHORT).show();
                 break;
             default:
         }
+        seekBar.setMax(musicService.mp.getDuration());
+    }
+
+    private void PlayWay() {
+        switch (playwaySituation) {
+            case 1:
+                musicService.mp.setLooping(false);
+                musicService.mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                    @Override
+                    public void onCompletion(MediaPlayer mediaPlayer) {
+                        musicService.nextMusic();
+                        seekBar.setMax(musicService.mp.getDuration());
+                        if (flag == 1) {
+                            saveToHistory();
+                        } else {
+                            Toast.makeText(MusicPlayerActivity.this, "这首歌为系统推荐，不计入试听历史", Toast.LENGTH_SHORT).show();
+                            flag = 1;
+                        }
+                    }
+                });
+                playwaySituation = 1;
+                break;
+            case 2:
+                musicService.mp.setLooping(false);
+                musicService.mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                    @Override
+                    public void onCompletion(MediaPlayer mediaPlayer) {
+                        musicService.noMusic();
+                        seekBar.setMax(musicService.mp.getDuration());
+                        if (flag == 1) {
+                            saveToHistory();
+                        } else {
+                            change();
+                            Toast.makeText(MusicPlayerActivity.this, "这首歌为系统推荐，不计入试听历史", Toast.LENGTH_SHORT).show();
+                            flag = 1;
+                        }
+                    }
+                });
+                playwaySituation = 2;
+                break;
+            case 3:
+                musicService.mp.setLooping(true);
+                playwaySituation = 3;
+                break;
+            default:
+        }
+    }
+
+    //    //当前歌曲存储到History表中
+    private void saveToHistory() {
+        change();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");// HH:mm:ss
+                        Date date = new Date(System.currentTimeMillis());
+                        History history = new History();
+                        List<History> histories = LitePal.where("path = ?", musicService.path()).find(History.class);
+                        List<MusicInfo> musicInfos = LitePal.where("music_package = ?", musicService.path()).find(MusicInfo.class);
+                        if (histories.size() == 0) {
+                            for (MusicInfo musicInfo : musicInfos) {
+                                history.setMusic_name(musicInfo.getMusic_name());
+                                history.setSinger_name(musicInfo.getMusic_player());
+                                history.setTime(simpleDateFormat.format(date));
+                                history.setPath(musicInfo.getMusic_package());
+                                history.save();
+                            }
+                        } else {
+                            history.setTime(simpleDateFormat.format(date));
+                            history.updateAll("path = ?", musicService.path());
+                        }
+                    }
+                });
+            }
+        }).start();
+    }
+
+    public void change() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        List<MusicInfo> musicInfos = LitePal.where("music_package = ?", musicService.currentPath()).find(MusicInfo.class);
+                        for (MusicInfo musicInfo : musicInfos) {
+                            musicImg.setImageResource(musicInfo.getImage_no());
+                            music.setText(musicInfo.getMusic_name());
+                            singer.setText(musicInfo.getMusic_player());
+                        }
+                    }
+                });
+            }
+        }).start();
     }
 
     @Override
@@ -250,7 +376,6 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
         return true;
     }
 
-
     @Override
     public void onDestroy() {
         unbindService(sc);
@@ -260,36 +385,10 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
     @Override
     public void finish() {
         Intent intent = new Intent();
-        intent.putExtra("musicSituation", musicSituation);
+        intent.putExtra("playWay", playwaySituation);
+        intent.putExtra("pickWay", pickWay);
+        intent.putExtra("flag", flag);
         setResult(RESULT_OK, intent);
         super.finish();
-    }
-
-    private void PlayWay() {
-        switch (playwaySituation) {
-            case 1:
-                musicService.mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                    @Override
-                    public void onCompletion(MediaPlayer mediaPlayer) {
-                        musicService.nextMusic();
-                    }
-                });
-                playwaySituation = 1;
-                break;
-            case 2:
-                musicService.mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                    @Override
-                    public void onCompletion(MediaPlayer mediaPlayer) {
-                        musicService.noMusic();
-                    }
-                });
-                playwaySituation = 2;
-                break;
-            case 3:
-                musicService.mp.setLooping(true);
-                playwaySituation = 3;
-                break;
-            default:
-        }
     }
 }

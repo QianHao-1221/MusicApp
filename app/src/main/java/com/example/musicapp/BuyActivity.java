@@ -1,9 +1,10 @@
 package com.example.musicapp;
 
 import android.os.Build;
+import android.os.Bundle;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
@@ -13,25 +14,20 @@ import android.view.View;
 
 import com.example.musicapp.adapter.FLBAdapter;
 import com.example.musicapp.db.FLBMusic;
+import com.example.musicapp.db.History;
+
+import org.litepal.LitePal;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class BuyActivity extends AppCompatActivity {
 
-    private FLBMusic[] flbMusics = {
-            new FLBMusic("可惜没如果", "林俊杰", "可惜啊"), new FLBMusic("子在西元前", "周杰伦", "爱在西亚"),
-            new FLBMusic("Can We Kiss Forever", "JBSD", "WWWW"), new FLBMusic("较简洁", "是", "是"),
-            new FLBMusic("12313", "123", "可惜啊123"), new FLBMusic("可惜没如果", "林俊杰", "可惜啊"),
-            new FLBMusic("和欢呼声", "林我去俊杰", "我去"), new FLBMusic("大噶", "爱所", "爱所撒"),
-            new FLBMusic("给", "大概", "傻瓜"), new FLBMusic("可惜没爱所是如果", "而我却", "我去"),
-            new FLBMusic(" 分数", "大水缸", "大水缸"), new FLBMusic("可惜没撒撒如果", "我去", "儿媳妇"),
-            new FLBMusic("可惜没而且额提到过如果", "神功大", "可惜啊"), new FLBMusic("撒", "我去", "可惜啊"),
-            new FLBMusic("前额头铁", " 而且", "请问他"), new FLBMusic("给都是", "去微软", "额我确认"),};
-
     private List<FLBMusic> flbMusicList = new ArrayList<>();
 
     private FLBAdapter adapter;
+
+    private SwipeRefreshLayout swipeRefreshLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,13 +64,57 @@ public class BuyActivity extends AppCompatActivity {
                 searchView.setIconified(false);
             }
         });
+
+        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_buy);
+        swipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refreshRexMusicList();
+            }
+        });
+
+        adapter.setLongClickListener(new FLBAdapter.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(int position) {
+                return false;
+            }
+        });
+    }
+
+    private void refreshRexMusicList() {
+        //下拉刷新操作
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        initMusicList();
+                        swipeRefreshLayout.setRefreshing(false);
+                    }
+                });
+            }
+        }).start();
     }
 
     private void initMusicList() {
         flbMusicList.clear();
-        for (int i = 0; i < flbMusics.length; i++) {
-            flbMusicList.add(flbMusics[i]);
-        }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        List<History> histories = LitePal.order("time desc").find(History.class);//查history表根据时间逆序输出数据
+                        for (History history : histories) {
+                            FLBMusic flbMusic = new FLBMusic(history.getMusic_name(), history.getSinger_name(), history.getPath());
+                            flbMusicList.add(flbMusic);
+                        }
+                    }
+                });
+            }
+        }).start();
     }
 
     @Override

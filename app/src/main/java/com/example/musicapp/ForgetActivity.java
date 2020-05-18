@@ -210,7 +210,7 @@ public class ForgetActivity extends AppCompatActivity {
 
                                 List<User> users = LitePal.where("user_no = ?", "" + updNo).find(User.class);
 
-                                if ("".equals(updNo) || users.size() == 0) {
+                                if ("".equals(updNo) || users.size() == 0) {//id输入为空或查询不到id号
                                     message.what = NO_NOT_EXIST;
                                     handler.sendMessage(message);
                                 } else {

@@ -16,7 +16,7 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.example.musicapp.adapter.FLBAdapter;
+import com.example.musicapp.adapter.RecAdapter;
 import com.example.musicapp.db.FLBMusic;
 
 import java.util.ArrayList;
@@ -32,7 +32,7 @@ public class RecMusicListInfoActivity extends AppCompatActivity {
 
     private String musicName, userNo;
 
-    private FLBAdapter adapter;
+    private RecAdapter adapter;
 
     private int userSituation;
 
@@ -62,10 +62,10 @@ public class RecMusicListInfoActivity extends AppCompatActivity {
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.info_list_view);
         LinearLayoutManager manager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(manager);
-        adapter = new FLBAdapter(data);
+        adapter = new RecAdapter(data);
         recyclerView.setAdapter(adapter);
 
-        adapter.setLongClickListener(new FLBAdapter.OnLongClickListener() {
+        adapter.setLongClickListener(new RecAdapter.OnLongClickListener() {
             @Override
             public boolean onLongClick(int position) {
                 if (userSituation == 0) {
@@ -86,8 +86,8 @@ public class RecMusicListInfoActivity extends AppCompatActivity {
             actionBar.setHomeAsUpIndicator(R.drawable.back);
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
-        collapsingToolbarLayout.setTitle(musicName);
-        Glide.with(this).load(musicImageId).into(musicImageView);
+        collapsingToolbarLayout.setTitle(musicName);//设置标题文字
+        Glide.with(this).load(musicImageId).into(musicImageView);//设置标题图片
     }
 
     private void initMusicList() {
@@ -99,14 +99,13 @@ public class RecMusicListInfoActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         Cursor cursor = getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, null, null, null, MediaStore.Audio.Media.DEFAULT_SORT_ORDER);// 默认排序顺序
-                        // 如果游标读取时还有下一个数据，读取
 
                         int idIndex = cursor.getColumnIndex(MediaStore.Audio.Media._ID);//获取列名对应的索引
                         int titleIndex = cursor.getColumnIndex(MediaStore.Audio.Media.TITLE);// 标题
                         int artistIndex = cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST);// 艺术家
                         int uriIndex = cursor.getColumnIndex(MediaStore.Audio.Media.DATA);// 文件路径
-                        Bundle bundle = new Bundle();
 
+                        // 如果游标读取时还有下一个数据，读取
                         while (cursor.moveToNext()) {
                             // 根据索引值获取对应列名中的数值
                             long _id = cursor.getLong(idIndex);

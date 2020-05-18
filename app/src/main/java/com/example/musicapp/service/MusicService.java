@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
+import android.util.Log;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,7 +18,7 @@ public class MusicService extends Service {
 
     private ArrayList<String> musicDir = new ArrayList<>();
 
-    private int musicIndex = -1;
+    private int musicIndex = 0;
 
     public final IBinder binder = new MyBinder();
 
@@ -36,8 +37,9 @@ public class MusicService extends Service {
     public static MediaPlayer mp = new MediaPlayer();
 
     public MusicService() {
+        musicDir.add("/storage/emulated/0/1.mp3");
         try {
-            mp.setDataSource("/storage/emulated/0/music.mp3");
+            mp.setDataSource(musicDir.get(0));
             //mp.setDataSource(Environment.getDataDirectory().getAbsolutePath()+"/You.mp3");
             mp.prepare();
         } catch (Exception e) {
@@ -67,6 +69,14 @@ public class MusicService extends Service {
         }
     }
 
+    public String path() {
+        return musicDir.get(musicIndex - 1);
+    }
+
+    public String currentPath() {
+        return musicDir.get(musicIndex);
+    }
+
     public void nextMusic() {
         if (mp != null && musicIndex < musicDir.size() - 1) {
             mp.stop();
@@ -84,10 +94,11 @@ public class MusicService extends Service {
     }
 
     public void preMusic() {
+        //上一曲
         if (mp != null && musicIndex > 0) {
-            mp.stop();
+            mp.stop();//暂停当前歌曲
             try {
-                mp.reset();
+                mp.reset();//重置播放器
                 mp.setDataSource(musicDir.get(musicIndex - 1));
                 musicIndex--;
                 mp.prepare();
@@ -106,8 +117,9 @@ public class MusicService extends Service {
             try {
                 mp.reset();
                 Random random = new Random();
-                int index = random.nextInt(musicDir.size());
-                mp.setDataSource(musicDir.get(index));
+                musicIndex = random.nextInt(musicDir.size());
+                mp.setDataSource(musicDir.get(musicIndex));
+                Log.e("musicDir.get(index)", musicDir.get(musicIndex));
                 mp.prepare();
                 mp.seekTo(0);
                 mp.start();

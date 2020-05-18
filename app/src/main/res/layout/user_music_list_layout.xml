@@ -15,17 +15,18 @@
             android:id="@+id/user_music_list_pic"
             android:layout_width="100dp"
             android:layout_height="100dp"
+            android:onClick="onClick"
             android:scaleType="centerCrop" />
 
         <TextView
             android:id="@+id/user_music_list_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
             android:layout_marginLeft="30dp"
+            android:layout_marginTop="20dp"
             android:textColor="#111"
-            android:textStyle="bold"
-            android:textSize="16sp" />
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
     </LinearLayout>
 

@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.example.musicapp.R;
@@ -65,7 +66,12 @@ public class UserMusicListAdapter extends RecyclerView.Adapter<UserMusicListAdap
                 mContext.startActivity(intent);
             }
         });
-
+        holder.musicListImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(mContext, "你好呀", Toast.LENGTH_SHORT).show();
+            }
+        });
         return holder;
     }
 
@@ -80,12 +86,14 @@ public class UserMusicListAdapter extends RecyclerView.Adapter<UserMusicListAdap
     }
 
     public void addData(int position, String name, int imageId) {
+        //添加歌单到主页面
         RecMusicList recMusicList = new RecMusicList(name, imageId);
         mMusicList.add(recMusicList);
         notifyItemInserted(position);
     }
 
     public void removeData(int position, final String userNo) {
+        //长按操作
         recMusicList = mMusicList.get(position);
         new Thread(new Runnable() {
             @Override

@@ -5,6 +5,7 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
@@ -65,9 +66,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private Dialog bottomDialog;//定义底部弹出菜单
 
-    public int userSituation = 0, musicSituation = 0, returnPicId;//0:未登录、未播放 1：已登录，播放中
+    public int userSituation = 0, returnPicId, playWay, pickWay, flag;//0:未登录、未播放 1：已登录，播放中
 
-    private String returnUserNo, returnColorsName = "blue";
+    private String returnUserNo, returnUserName, returnColorsName = "blue";
 
     private Toolbar toolbar;
 
@@ -92,6 +93,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
+    public void onPointerCaptureChanged(boolean hasCapture) {
+
+    }
+
+//    private DownloadService.DownloadBinder downloadBinder;
+//
+//    private ServiceConnection connection = new ServiceConnection() {
+//
+//        @Override
+//        public void onServiceDisconnected(ComponentName name) {
+//        }
+//
+//        @Override
+//        public void onServiceConnected(ComponentName name, IBinder service) {
+//            downloadBinder = (DownloadService.DownloadBinder) service;
+//        }
+//
+//    };
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -99,13 +120,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         LitePal.getDatabase();//创建数据库
         initView();//初始化页面`
 
+//        Intent intent = new Intent(this, DownloadService.class);
+//        startService(intent);
+//        bindService(intent, connection, BIND_AUTO_CREATE);
+//        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+//            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+//        }
+
         customViewPager = (CustomViewPager) findViewById(R.id.container);
         customViewPager.setScanScroll(false);//禁止页面滑动
 
         musicPlayer = (CircleImageView) findViewById(R.id.music);
 
         initAnimator();//初始化ObjectAnimator
-        initMusicRotate(musicSituation);//底部旋转的初始化
+        initMusicRotate();//底部旋转的初始化
 
         navMusic = (ImageView) findViewById(R.id.nav_music_img);
         navInfo = (ImageView) findViewById(R.id.nav_info_img);
@@ -140,6 +168,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 } else {
                     Intent intent = new Intent(MainActivity.this, UpdateNameActivity.class);
                     intent.putExtra("userNo", returnUserNo);
+                    intent.putExtra("userName", returnUserName);
                     startActivityForResult(intent, 2);
                     overridePendingTransition(R.anim.bottom_in, R.anim.bottom_silent);
                 }
@@ -184,7 +213,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             Intent intent1 = new Intent(new Intent(MainActivity.this, UpdatePasswordActivity.class));
                             intent1.putExtra("userNo", returnUserNo);
                             startActivity(intent1);
-                            overridePendingTransition(R.anim.slide_in_right, R.anim.bottom_silent);
+                            overridePendingTransition(R.anim.bottom_in, R.anim.bottom_silent);
                         }
                         break;
                     case R.id.nav_time:
@@ -206,12 +235,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         fragmentList.add(new FirstLayout());
         fragmentList.add(new SecondLayout());
 
-        saveData();
+//        saveData();
 
         customViewPager.setAdapter(new MyViewPagerAdapter(getSupportFragmentManager(), fragmentList));
         initColor(userSituation, returnColorsName, 2);
         customViewPager.setCurrentItem(1);//初始页面
         actionBar.setTitle("我的");
+
     }
 
     //左滑菜单启动
@@ -247,11 +277,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     //初始化底部music的旋转方式
-    private void initMusicRotate(int musicSituation) {
-        if (musicSituation == 0) {
+    private void initMusicRotate() {
+        MusicService musicService = new MusicService();
+        if (musicService.mp.isPlaying()) {
+            mAnimator.resume();
+        } else {
             mAnimator.pause();
-        } else if (musicSituation == 1) {
-            mAnimator.start();
         }
     }
 
@@ -348,7 +379,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 public void run() {
                                     users = LitePal.where("user_no = ?", returnUserNo).find(User.class);
                                     for (User user : users) {
-                                        userName.setText(user.getUser_name());
+                                        returnUserName = user.getUser_name();
+                                        userName.setText(returnUserName);
                                         imageView.setImageResource(user.getPic_id());
                                         userSituation = 1;
                                         initColor(userSituation, returnColorsName, 2);
@@ -359,7 +391,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                         //利用SharedPerferences暂时存储一下用户的id和状态
                                         editor = getSharedPreferences("data", MODE_PRIVATE).edit();
                                         editor.putString("userNo", returnUserNo);
-                                        editor.putInt("userSituation", userSituation);
                                         editor.apply();
                                     }
                                 }
@@ -429,8 +460,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case 5:
                 if (resultCode == RESULT_OK) {
                     //音乐播放状态
-                    musicSituation = data.getIntExtra("musicSituation", 100);
-                    initMusicRotate(musicSituation);
+                    playWay = data.getIntExtra("playWay", 100);
+                    pickWay = data.getIntExtra("pickWay", 100);
+                    flag = data.getIntExtra("flag", 1);
+                    initMusicRotate();
                 }
             default:
         }
@@ -458,6 +491,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     imageView.setImageResource(R.drawable.nologin);
                     userSituation = 0;
                     Toast.makeText(MainActivity.this, "您已退出登录", Toast.LENGTH_SHORT).show();
+                    onToFragmentListener.toFragment("0");
                     //清空SharedPreFerences中的数据
                     editor.clear();
                     editor.commit();
@@ -468,7 +502,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 break;
             case R.id.music:
-                startActivityForResult(new Intent(MainActivity.this, MusicPlayerActivity.class), 5);
+                Intent intent = new Intent(new Intent(MainActivity.this, MusicPlayerActivity.class));
+                intent.putExtra("userNo", returnUserNo);
+                intent.putExtra("playWay", playWay);
+                intent.putExtra("pickWay", playWay);
+                intent.putExtra("flag", flag);
+                intent.putExtra("userSituation", userSituation);
+                startActivityForResult(intent, 5);
                 overridePendingTransition(R.anim.bottom_in, R.anim.bottom_silent);
                 break;
             case R.id.five_to_close:
@@ -542,7 +582,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void run() {
                 synchronized (this) {
                     try {
-                        wait(autoCloseTime); //5秒
+                        wait(autoCloseTime); //等待时间
                     } catch (InterruptedException e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
@@ -560,7 +600,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }).start();
     }
 
-    private void saveData() {
+//    private void saveData() {
 //        SysRecMusicList sysRecMusicList = new SysRecMusicList();
 //        sysRecMusicList.setImageId(R.drawable.look);
 //        sysRecMusicList.updateAll("id = 8");
@@ -603,17 +643,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        sysRecMusicList.setList_name("这首歌好听到爆炸了");
 //        sysRecMusicList.setImageId(R.drawable.tuijian);
 //        sysRecMusicList.save();
-    }
+//    }
 
     //点击两次退出程序
 
     public void exit() {
         if ((System.currentTimeMillis() - exitTime) > 2000) {
             Toast.makeText(MainActivity.this, "再按一次返回桌面", Toast.LENGTH_SHORT).show();
-            mDrawerLayout.closeDrawers();
-            exitTime = System.currentTimeMillis();
+            mDrawerLayout.closeDrawers();//关闭左滑菜单
+            exitTime = System.currentTimeMillis();//获取当前系统时间  毫秒单位
         } else {
             moveTaskToBack(false);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        switch (requestCode) {
+            case 1:
+                if (grantResults.length > 0 && grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this, "拒绝权限将无法使用程序", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+                break;
+            default:
         }
     }
 
@@ -630,7 +683,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void finish() {
         super.finish();
         Intent intent = new Intent(MainActivity.this, MusicService.class);
-        stopService(intent);
+        stopService(intent);//停止服务
     }
 
     @Override
@@ -638,5 +691,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onDestroy();
         Intent intent = new Intent(MainActivity.this, MusicService.class);
         stopService(intent);
+//        unbindService(connection);
     }
 }

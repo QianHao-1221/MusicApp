@@ -37,8 +37,6 @@ public class UserMusicListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user_music_list);
 
-        initData();
-
         //接受传来的数据：音乐名、图片id
         Intent intent = getIntent();
         String musicName = intent.getStringExtra(MUSIC_NAME);
@@ -74,10 +72,6 @@ public class UserMusicListActivity extends AppCompatActivity {
         Glide.with(this).load(musicImageId).into(musicImageView);
     }
 
-    private void initData() {
-
-    }
-
     //嵌套Listview用的方法
     public void setListViewHeightBasedOnChildren(ListView listView) {
         // 获取ListView对应的Adapter
@@ -109,6 +103,7 @@ public class UserMusicListActivity extends AppCompatActivity {
             case android.R.id.home:
                 finish();
                 return true;
+            default:
         }
         return super.onOptionsItemSelected(item);
     }

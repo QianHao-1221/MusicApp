@@ -2,7 +2,7 @@
 <litepal>
     <dbname value="MusicApp"></dbname>
 
-    <version value="14"></version>
+    <version value="22"></version>
 
     <list>
         <mapping class="com.example.musicapp.db.User"></mapping>
@@ -10,5 +10,7 @@
         <mapping class="com.example.musicapp.db.MyMusicList"></mapping>
         <mapping class="com.example.musicapp.db.SysRecMusicList"></mapping>
         <mapping class="com.example.musicapp.db.MyFav"></mapping>
+        <mapping class="com.example.musicapp.db.History"></mapping>
+        <mapping class="com.example.musicapp.db.Comment"></mapping>
     </list>
 </litepal>

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Looper;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
@@ -51,11 +52,11 @@ public class SecondLayout extends Fragment implements MainActivity.OnToFragmentL
 
         addList = (ImageView) view.findViewById(R.id.add_list);
 
-        RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.user_music_list);
-        GridLayoutManager layoutManager = new GridLayoutManager(view.getContext(), 1);
-        recyclerView.setLayoutManager(layoutManager);
+        RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.user_music_list);//获取Recycleview
+        GridLayoutManager layoutManager = new GridLayoutManager(view.getContext(), 1);//选择显示的方式
+        recyclerView.setLayoutManager(layoutManager);//显示方式传入recyycleview
         adapter = new UserMusicListAdapter(recMusicLists);
-        recyclerView.setAdapter(adapter);
+        recyclerView.setAdapter(adapter);//传入适配器并显示
 
         setListener();
 
@@ -77,11 +78,14 @@ public class SecondLayout extends Fragment implements MainActivity.OnToFragmentL
                                         new Thread(new Runnable() {
                                             @Override
                                             public void run() {
+                                                Looper.prepare();
                                                 //歌单信息存到数据库
                                                 MyMusicList myMusicList = new MyMusicList();
                                                 myMusicList.setList_name(editText.getText().toString());
                                                 myMusicList.setUser_no(userNo);
                                                 myMusicList.save();
+                                                Toast.makeText(view.getContext(), "歌单创建成功", Toast.LENGTH_SHORT).show();
+                                                Looper.loop();
                                             }
                                         }).start();
                                     }
@@ -110,6 +114,7 @@ public class SecondLayout extends Fragment implements MainActivity.OnToFragmentL
             }
         });
 
+        //下拉刷新
         swipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipe_refresh_2);
         swipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary);
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -122,6 +127,7 @@ public class SecondLayout extends Fragment implements MainActivity.OnToFragmentL
     }
 
     private void refreshRexMusicList() {
+        //下拉刷新操作
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -137,8 +143,8 @@ public class SecondLayout extends Fragment implements MainActivity.OnToFragmentL
         }).start();
     }
 
-    private void initMusicList() {
-        recMusicLists.clear();
+    public void initMusicList() {
+        recMusicLists.clear();//清空数组
         new Thread(new Runnable() {
             @Override
             public void run() {
