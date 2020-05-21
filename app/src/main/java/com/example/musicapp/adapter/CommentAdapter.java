@@ -18,10 +18,7 @@ import java.util.List;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
-/**
- * Created by 贺宁昊 on 2020/5/18.
- */
-
+//评论的适配器
 public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.ViewHolder> {
 
     private Context mContext;
@@ -78,16 +75,17 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.ViewHold
         boolean onLongClick(int position);
     }
 
-    public void agree(int position, final String userNo, final int musicId) {
+    public void agree(int position, final int musicId) {
         commentController = mCommentController.get(position);
         new Thread(new Runnable() {
             @Override
             public void run() {
-                List<Comment> comments = LitePal.where("user_no = ? and music_id = ? and date = ? and comment_text = ?", userNo, String.valueOf(musicId), commentController.getDate(), commentController.getText()).find(Comment.class);
+                //查出是哪首歌，什么时候评论的，评论内容是啥，然后点赞数+1
+                List<Comment> comments = LitePal.where("music_id = ? and date = ? and comment_text = ?", String.valueOf(musicId), commentController.getDate(), commentController.getText()).find(Comment.class);
                 for (Comment comment : comments) {
                     Comment c = new Comment();
                     c.setAgree(comment.getAgree() + 1);
-                    c.updateAll("user_no = ? and music_id = ? and date = ? and comment_text = ?", userNo, String.valueOf(musicId), commentController.getDate(), commentController.getText());
+                    c.updateAll("music_id = ? and date = ? and comment_text = ?", String.valueOf(musicId), commentController.getDate(), commentController.getText());
                 }
             }
         }).start();

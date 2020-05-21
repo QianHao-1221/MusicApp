@@ -13,7 +13,9 @@ import com.example.musicapp.db.Colors;
 
 import java.util.List;
 
-public class ColorsAdapter extends RecyclerView.Adapter<PicAdapter.ViewHolder> {
+//个性化选择适配器
+public class ColorsAdapter extends RecyclerView.Adapter<ColorsAdapter.ViewHolder> {
+
     private List<Colors> mColors;
 
     ColorSelectionActivity colorSelection;
@@ -37,10 +39,11 @@ public class ColorsAdapter extends RecyclerView.Adapter<PicAdapter.ViewHolder> {
     }
 
     @Override
-    public PicAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.pic, parent, false);
-        final PicAdapter.ViewHolder holder = new PicAdapter.ViewHolder(view);
-        holder.picView.setOnClickListener(new View.OnClickListener() {
+    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.pic, parent, false);//最基础的布局
+        final ViewHolder holder = new ViewHolder(view);
+        //cardView点击事件
+        holder.colorView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 int position = holder.getAdapterPosition();
@@ -58,10 +61,10 @@ public class ColorsAdapter extends RecyclerView.Adapter<PicAdapter.ViewHolder> {
     }
 
     @Override
-    public void onBindViewHolder(PicAdapter.ViewHolder holder, int position) {
+    public void onBindViewHolder(ViewHolder holder, int position) {
         Colors colors = mColors.get(position);
-        holder.picImage.setImageResource(colors.getImageId());
-        holder.picNo.setText(colors.getName());
+        holder.colorImage.setImageResource(colors.getImageId());
+        holder.colorNo.setText(colors.getName());
     }
 
     @Override

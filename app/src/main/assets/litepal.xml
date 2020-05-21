@@ -2,15 +2,24 @@
 <litepal>
     <dbname value="MusicApp"></dbname>
 
-    <version value="22"></version>
+    <version value="23"></version>
 
     <list>
+        <!--用户表-->
         <mapping class="com.example.musicapp.db.User"></mapping>
+        <!--音乐表-->
         <mapping class="com.example.musicapp.db.MusicInfo"></mapping>
+        <!--用户自建歌单-->
         <mapping class="com.example.musicapp.db.MyMusicList"></mapping>
+        <!--推荐歌单-->
         <mapping class="com.example.musicapp.db.SysRecMusicList"></mapping>
+        <!--我喜欢-->
         <mapping class="com.example.musicapp.db.MyFav"></mapping>
+        <!--历史记录-->
         <mapping class="com.example.musicapp.db.History"></mapping>
+        <!--评论区-->
         <mapping class="com.example.musicapp.db.Comment"></mapping>
+        <!--自建歌单内歌曲详情-->
+        <mapping class="com.example.musicapp.db.MyMusicListInfo"></mapping>
     </list>
 </litepal>

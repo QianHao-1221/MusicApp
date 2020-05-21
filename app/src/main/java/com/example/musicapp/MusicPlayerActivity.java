@@ -37,7 +37,7 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
 
     public Intent intent, intent2;
 
-    private int playwaySituation = 1, flag = 0, userSituation = 0;//0:未播放 1:开始播放
+    private int playwaySituation = 1, flag = 0, userSituation = 0, playflag, way;//0:未播放 1:开始播放
 
     private TextView currentTime, allTime, music, singer;
 
@@ -48,6 +48,8 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
     private SimpleDateFormat time = new SimpleDateFormat("m:ss");
 
     private String uri, musicName, artist, userNo;
+
+    private String path;
 
     private ServiceConnection sc = new ServiceConnection() {
         @Override
@@ -151,6 +153,21 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
         flag = intent2.getIntExtra("flag", 1);
         userSituation = intent2.getIntExtra("userSituation", 0);
 
+        path = intent2.getStringExtra("flb_path");
+        playflag = intent2.getIntExtra("flb_playFlag", 0);
+        way = intent2.getIntExtra("flb_way", 1);
+
+        if (path != null && playflag == 1) {
+            if (way == 1) {
+                getInfo(path);
+                flag = 1;
+            } else {
+                change();
+            }
+        } else {
+            change();
+        }
+
         musicImg = (ImageView) findViewById(R.id.player_song_pic);
         music = (TextView) findViewById(R.id.player_song_name);
         singer = (TextView) findViewById(R.id.player_singer_name);
@@ -174,12 +191,10 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
 
         PlayWay();
         setPlayWay(pickWay);
-        change();
     }
 
     @Override
     protected void onResume() {
-        change();
         if (!musicService.mp.isPlaying()) {
             playBtn.setImageResource(R.drawable.start);
         } else {
@@ -194,7 +209,6 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
 
     @Override
     public void onClick(View view) {
-        change();
         switch (view.getId()) {
             case R.id.player_song_pic:
                 startActivityForResult(new Intent(MusicPlayerActivity.this, LyricActivity.class), 1);
@@ -217,12 +231,16 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
                 break;
             case R.id.last_music:
                 musicService.preMusic();
+                way = 0;
+                change();
                 PlayWay();
                 seekBar.setMax(musicService.mp.getDuration());
                 break;
             case R.id.next_music:
                 flag = 1;
+                way = 0;
                 musicService.nextMusic();
+                change();
                 PlayWay();
                 seekBar.setMax(musicService.mp.getDuration());
                 break;
@@ -240,13 +258,30 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
                         }
                     }
                 }).start();
-
+                break;
+            case R.id.download:
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                List<MusicInfo> musicInfos = LitePal.where("music_package = ?", musicService.currentPath()).find(MusicInfo.class);
+                                if (musicInfos.size() == 0) {
+                                    //开始下载
+                                } else {
+                                    Toast.makeText(MusicPlayerActivity.this, "歌曲已经下载过了", Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        });
+                    }
+                }).start();
+                break;
             default:
         }
     }
 
     private void setPlayWay(int way) {
-        change();
         switch (way) {
             case 0:
             case 1:
@@ -277,6 +312,7 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
                     @Override
                     public void onCompletion(MediaPlayer mediaPlayer) {
                         musicService.nextMusic();
+                        change();
                         seekBar.setMax(musicService.mp.getDuration());
                         if (flag == 1) {
                             saveToHistory();
@@ -284,6 +320,7 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
                             Toast.makeText(MusicPlayerActivity.this, "这首歌为系统推荐，不计入试听历史", Toast.LENGTH_SHORT).show();
                             flag = 1;
                         }
+                        way = 0;
                     }
                 });
                 playwaySituation = 1;
@@ -294,14 +331,15 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
                     @Override
                     public void onCompletion(MediaPlayer mediaPlayer) {
                         musicService.noMusic();
+                        change();
                         seekBar.setMax(musicService.mp.getDuration());
                         if (flag == 1) {
                             saveToHistory();
                         } else {
-                            change();
                             Toast.makeText(MusicPlayerActivity.this, "这首歌为系统推荐，不计入试听历史", Toast.LENGTH_SHORT).show();
                             flag = 1;
                         }
+                        way = 0;
                     }
                 });
                 playwaySituation = 2;
@@ -316,7 +354,6 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
 
     //    //当前歌曲存储到History表中
     private void saveToHistory() {
-        change();
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -365,6 +402,25 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
         }).start();
     }
 
+    public void getInfo(final String path) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        List<MusicInfo> musicInfos = LitePal.where("music_package = ?", path).find(MusicInfo.class);
+                        for (MusicInfo musicInfo : musicInfos) {
+                            musicImg.setImageResource(musicInfo.getImage_no());
+                            music.setText(musicInfo.getMusic_name());
+                            singer.setText(musicInfo.getMusic_player());
+                        }
+                    }
+                });
+            }
+        }).start();
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -388,6 +444,7 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
         intent.putExtra("playWay", playwaySituation);
         intent.putExtra("pickWay", pickWay);
         intent.putExtra("flag", flag);
+        intent.putExtra("flb_way", way);
         setResult(RESULT_OK, intent);
         super.finish();
     }

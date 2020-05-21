@@ -48,7 +48,7 @@ public class PicAdapter extends RecyclerView.Adapter<PicAdapter.ViewHolder> {
             public void onClick(View v) {
                 int position = holder.getAdapterPosition();
                 Pic pic = mPicList.get(position);
-                imageSelection.getInfo(pic);
+                imageSelection.getInfo(pic);//图片的对象传给ImageSelectionActivity以便取出数据
                 imageSelection = (ImageSelectionActivity) v.getContext();
                 imageSelection.finish();
             }

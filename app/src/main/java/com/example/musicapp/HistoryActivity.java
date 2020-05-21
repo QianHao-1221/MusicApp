@@ -1,5 +1,6 @@
 package com.example.musicapp;
 
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -12,7 +13,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.example.musicapp.adapter.FLBAdapter;
+import com.example.musicapp.adapter.HistoryAdapter;
 import com.example.musicapp.db.FLBMusic;
 import com.example.musicapp.db.History;
 
@@ -21,18 +22,18 @@ import org.litepal.LitePal;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BuyActivity extends AppCompatActivity {
+public class HistoryActivity extends AppCompatActivity {
 
     private List<FLBMusic> flbMusicList = new ArrayList<>();
 
-    private FLBAdapter adapter;
+    private HistoryAdapter adapter;
 
     private SwipeRefreshLayout swipeRefreshLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_buy);
+        setContentView(R.layout.activity_history);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -47,7 +48,7 @@ public class BuyActivity extends AppCompatActivity {
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.buy_recycle_view);
         GridLayoutManager layoutManager = new GridLayoutManager(this, 1);
         recyclerView.setLayoutManager(layoutManager);
-        adapter = new FLBAdapter(flbMusicList);
+        adapter = new HistoryAdapter(flbMusicList);
         recyclerView.setAdapter(adapter);
 
         final SearchView searchView = (SearchView) findViewById(R.id.buy_search_view);
@@ -61,7 +62,30 @@ public class BuyActivity extends AppCompatActivity {
         searchView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                flbMusicList.clear();
                 searchView.setIconified(false);
+            }
+        });
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                search(query);
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                flbMusicList.clear();
+                return false;
+            }
+        });
+
+        searchView.setOnCloseListener(new SearchView.OnCloseListener() {
+            @Override
+            public boolean onClose() {
+                initMusicList();
+                return false;
             }
         });
 
@@ -74,7 +98,7 @@ public class BuyActivity extends AppCompatActivity {
             }
         });
 
-        adapter.setLongClickListener(new FLBAdapter.OnLongClickListener() {
+        adapter.setLongClickListener(new HistoryAdapter.OnLongClickListener() {
             @Override
             public boolean onLongClick(int position) {
                 return false;
@@ -115,6 +139,34 @@ public class BuyActivity extends AppCompatActivity {
                 });
             }
         }).start();
+    }
+
+    private void search(final String text) {
+        flbMusicList.clear();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        List<History> lists = LitePal.where("music_name like ?", "%" + text + "%").order("music_name").find(History.class);
+                        for (History history : lists) {
+                            FLBMusic flbMusic = new FLBMusic(history.getMusic_name(), history.getSinger_name(), history.getPath());
+                            flbMusicList.add(flbMusic);
+                        }
+                    }
+                });
+            }
+        }).start();
+    }
+
+    public void getLocal(FLBMusic flbMusic, int playFlag) {
+        //向MA中传值
+        Intent intent = new Intent();
+        intent.putExtra("flb_path", flbMusic.getPageName());
+        intent.putExtra("flb_playFlag", playFlag);
+        intent.putExtra("flb_way", 1);
+        setResult(RESULT_OK, intent);
     }
 
     @Override

@@ -9,6 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.text.InputType;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
@@ -32,7 +33,7 @@ public class CommentActivity extends AppCompatActivity implements View.OnClickLi
 
     private List<CommentController> commentControllers = new ArrayList<>();
 
-    private int userSituation,musicId;
+    private int userSituation, musicId;
 
     private String userNo;
 
@@ -45,7 +46,7 @@ public class CommentActivity extends AppCompatActivity implements View.OnClickLi
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_comment);
 
-        Toast.makeText(CommentActivity.this,"长按可以点赞哦，无限次！",Toast.LENGTH_SHORT).show();
+        Toast.makeText(CommentActivity.this, "长按可以点赞哦，无限次！", Toast.LENGTH_SHORT).show();
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -70,6 +71,7 @@ public class CommentActivity extends AppCompatActivity implements View.OnClickLi
         initComment();
 
         if (userSituation == 0) {
+            commentText.setInputType(InputType.TYPE_NULL);
             commentText.setHint("请先登录");
             commentText.setEnabled(false);
         } else {
@@ -89,7 +91,7 @@ public class CommentActivity extends AppCompatActivity implements View.OnClickLi
         adapter.setLongClickListener(new CommentAdapter.OnLongClickListener() {
             @Override
             public boolean onLongClick(int position) {
-                adapter.agree(position, userNo, musicId);
+                adapter.agree(position, musicId);
                 Toast.makeText(CommentActivity.this, "点赞成功！", Toast.LENGTH_SHORT).show();
                 return true;
             }

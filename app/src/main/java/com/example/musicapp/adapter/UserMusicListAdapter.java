@@ -2,6 +2,8 @@ package com.example.musicapp.adapter;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Looper;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -12,14 +14,18 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.example.musicapp.AddToListActivity;
 import com.example.musicapp.R;
-import com.example.musicapp.UserMusicListActivity;
+import com.example.musicapp.UserMusicListInfoActivity;
 import com.example.musicapp.db.MyMusicList;
+import com.example.musicapp.db.MyMusicListInfo;
 import com.example.musicapp.db.RecMusicList;
 
 import org.litepal.LitePal;
 
 import java.util.List;
+
+import static android.content.Context.MODE_PRIVATE;
 
 public class UserMusicListAdapter extends RecyclerView.Adapter<UserMusicListAdapter.ViewHolder> {
 
@@ -30,6 +36,8 @@ public class UserMusicListAdapter extends RecyclerView.Adapter<UserMusicListAdap
     private OnLongClickListener mLongClickListener;
 
     private RecMusicList recMusicList;
+
+    private int i;
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         CardView cardView;
@@ -44,8 +52,9 @@ public class UserMusicListAdapter extends RecyclerView.Adapter<UserMusicListAdap
         }
     }
 
-    public UserMusicListAdapter(List<RecMusicList> recMusicLists) {
+    public UserMusicListAdapter(List<RecMusicList> recMusicLists, int flag) {
         mMusicList = recMusicLists;
+        i = flag;
     }
 
     @Override
@@ -60,10 +69,17 @@ public class UserMusicListAdapter extends RecyclerView.Adapter<UserMusicListAdap
             public void onClick(View view) {
                 int position = holder.getAdapterPosition();
                 recMusicList = mMusicList.get(position);
-                Intent intent = new Intent(mContext, UserMusicListActivity.class);
-                intent.putExtra(UserMusicListActivity.MUSIC_NAME, recMusicList.getName());
-                intent.putExtra(UserMusicListActivity.MUSIC_IMAGE_ID, recMusicList.getImageId());
-                mContext.startActivity(intent);
+                if (i == 0) {
+                    addToList(position);
+                    AddToListActivity addToListActivity = (AddToListActivity) view.getContext();
+                    addToListActivity.finish();
+                } else {
+                    Intent intent = new Intent(mContext, UserMusicListInfoActivity.class);
+                    intent.putExtra(UserMusicListInfoActivity.MUSIC_NAME, recMusicList.getName());
+                    intent.putExtra(UserMusicListInfoActivity.MUSIC_IMAGE_ID, recMusicList.getImageId());
+                    intent.putExtra("list_name", recMusicList.getName());
+                    mContext.startActivity(intent);
+                }
             }
         });
         holder.musicListImage.setOnClickListener(new View.OnClickListener() {
@@ -99,10 +115,43 @@ public class UserMusicListAdapter extends RecyclerView.Adapter<UserMusicListAdap
             @Override
             public void run() {
                 LitePal.deleteAll(MyMusicList.class, "user_no = ? and list_name = ?", userNo, recMusicList.getName());
+                LitePal.deleteAll(MyMusicListInfo.class, "user_no = ? and list_name = ?", userNo, recMusicList.getName());
             }
         }).start();
         mMusicList.remove(position);
         notifyItemRemoved(position);
+    }
+
+    public void addToList(final int position) {
+        recMusicList = mMusicList.get(position);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Looper.prepare();
+                SharedPreferences preferences = mContext.getSharedPreferences("addInfo", MODE_PRIVATE);
+                MyMusicListInfo myMusicListInfo = new MyMusicListInfo();
+
+                myMusicListInfo.setMusic_name(preferences.getString("musicName", ""));//存歌曲名
+                myMusicListInfo.setSinger_name(preferences.getString("singerName", ""));//存歌手
+                myMusicListInfo.setPath(preferences.getString("path", ""));//存路径
+                myMusicListInfo.setUser_no(preferences.getString("userNo", ""));//存用户号
+                myMusicListInfo.setList_name(recMusicList.getName());//存列表名
+
+                List<MyMusicListInfo> myMusicListInfos = LitePal.where("user_no = ? and music_name = ? and singer_name = ? and list_name = ?",
+                        preferences.getString("userNo", ""), preferences.getString("musicName", ""),
+                        preferences.getString("singerName", ""), recMusicList.getName()).find(MyMusicListInfo.class);
+                if (myMusicListInfos.size() == 0) {
+                    myMusicListInfo.save();
+                    Toast.makeText(mContext, "成功添加到" + recMusicList.getName() + "歌单", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(mContext, "已经添加过啦！", Toast.LENGTH_SHORT).show();
+                }
+                SharedPreferences.Editor editor = preferences.edit();
+                editor.clear();
+                editor.commit();
+                Looper.loop();
+            }
+        }).start();
     }
 
     @Override

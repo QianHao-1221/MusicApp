@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Looper;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
@@ -40,7 +39,7 @@ public class SecondLayout extends Fragment implements MainActivity.OnToFragmentL
 
     private SwipeRefreshLayout swipeRefreshLayout;
 
-    private ImageView addList;
+    private ImageView favPic, addList;
 
     private String userNo = "0";
 
@@ -48,15 +47,16 @@ public class SecondLayout extends Fragment implements MainActivity.OnToFragmentL
     public View onCreateView(final LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.layout2, container, false);
 
-        initMusicList();
-
         addList = (ImageView) view.findViewById(R.id.add_list);
+        favPic = (ImageView) view.findViewById(R.id.fav_pic);
 
         RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.user_music_list);//获取Recycleview
         GridLayoutManager layoutManager = new GridLayoutManager(view.getContext(), 1);//选择显示的方式
         recyclerView.setLayoutManager(layoutManager);//显示方式传入recyycleview
-        adapter = new UserMusicListAdapter(recMusicLists);
+        adapter = new UserMusicListAdapter(recMusicLists, 1);
         recyclerView.setAdapter(adapter);//传入适配器并显示
+
+        initMusicList();
 
         setListener();
 
@@ -74,18 +74,25 @@ public class SecondLayout extends Fragment implements MainActivity.OnToFragmentL
                                     if ("".equals(editText.getText().toString())) {
                                         Toast.makeText(view.getContext(), "歌单名不能为空", Toast.LENGTH_SHORT).show();
                                     } else {
-                                        adapter.addData(0, editText.getText().toString(), R.drawable.note);
                                         new Thread(new Runnable() {
                                             @Override
                                             public void run() {
-                                                Looper.prepare();
-                                                //歌单信息存到数据库
-                                                MyMusicList myMusicList = new MyMusicList();
-                                                myMusicList.setList_name(editText.getText().toString());
-                                                myMusicList.setUser_no(userNo);
-                                                myMusicList.save();
-                                                Toast.makeText(view.getContext(), "歌单创建成功", Toast.LENGTH_SHORT).show();
-                                                Looper.loop();
+                                                getActivity().runOnUiThread(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        //歌单信息存到数据库
+                                                        List<MyMusicList> myMusicLists = LitePal.where("user_no = ? and list_name = ?", userNo, editText.getText().toString()).find(MyMusicList.class);
+                                                        if (myMusicLists.size() == 0) {
+                                                            MyMusicList myMusicList = new MyMusicList();
+                                                            myMusicList.setList_name(editText.getText().toString());
+                                                            myMusicList.setUser_no(userNo);
+                                                            myMusicList.save();
+                                                            Toast.makeText(view.getContext(), "歌单创建成功", Toast.LENGTH_SHORT).show();
+                                                        } else {
+                                                            Toast.makeText(view.getContext(), "歌单不能重名", Toast.LENGTH_SHORT).show();
+                                                        }
+                                                    }
+                                                });
                                             }
                                         }).start();
                                     }
@@ -123,6 +130,7 @@ public class SecondLayout extends Fragment implements MainActivity.OnToFragmentL
                 refreshRexMusicList();
             }
         });
+
         return view;
     }
 
@@ -177,6 +185,7 @@ public class SecondLayout extends Fragment implements MainActivity.OnToFragmentL
         }
     }
 
+    //销毁后，不再传值
     @Override
     public void onDestroyView() {
         super.onDestroyView();

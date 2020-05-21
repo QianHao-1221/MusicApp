@@ -3,3 +3,4 @@
 3.长按删除和新建歌单，长按的接口回调，RecycleView的增删
 4.当时为了给选择头像和选择颜色为了给MainActivity传值，先在adapter里获取值然后传给它对应的Activity然后再用intent传回去
 5.点击音乐就播放，FLBAdapter里有，直接调用的MusicService里的play()方法，在adapter里获取路径，然后利用play传过去
+6.歌曲添加到歌单：长按歌曲然后弹窗，弹窗点击进入添加歌单页面的时候SharedPreference就会把歌曲名、歌手、路径存addInfo中，然后进入到页面后点击歌单，调用UserMusicListAdapter中的save方法，然后就行了。

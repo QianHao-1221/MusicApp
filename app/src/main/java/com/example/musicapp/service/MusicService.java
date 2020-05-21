@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
-import android.util.Log;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -119,7 +118,6 @@ public class MusicService extends Service {
                 Random random = new Random();
                 musicIndex = random.nextInt(musicDir.size());
                 mp.setDataSource(musicDir.get(musicIndex));
-                Log.e("musicDir.get(index)", musicDir.get(musicIndex));
                 mp.prepare();
                 mp.seekTo(0);
                 mp.start();

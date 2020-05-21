@@ -1,7 +1,6 @@
 package com.example.musicapp;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -14,64 +13,74 @@ import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.example.musicapp.adapter.FavAdapter;
-import com.example.musicapp.db.FLBMusic;
-import com.example.musicapp.db.MyFav;
+import com.example.musicapp.adapter.UserMusicListAdapter;
+import com.example.musicapp.db.MyMusicList;
+import com.example.musicapp.db.RecMusicList;
 
 import org.litepal.LitePal;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class FavActivity extends AppCompatActivity {
+public class AddToListActivity extends AppCompatActivity {
 
-    private List<FLBMusic> flbMusicList = new ArrayList<>();
+    private List<RecMusicList> recMusicLists = new ArrayList<>();
 
-    private FavAdapter adapter;
+    private UserMusicListAdapter adapter;
+
+    private SwipeRefreshLayout swipeRefreshLayout;
 
     private String userNo;
 
-    private int userSituation;
+    private int position;
 
-    private SwipeRefreshLayout swipeRefreshLayout;
+    private SearchView searchView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_fav);
+        setContentView(R.layout.activity_add_to_list);
 
-        initMusicList();
+        //取出从RecMusicListInfo传过来的数据
         Intent intent = getIntent();
         userNo = intent.getStringExtra("userNo");
 
-        SharedPreferences preferences = getSharedPreferences("data", MODE_PRIVATE);
-        userSituation = preferences.getInt("userSituation", 0);
+        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.add_to_list_recycle_view);//获取Recycleview
+        GridLayoutManager layoutManager = new GridLayoutManager(this, 1);//选择显示的方式
+        recyclerView.setLayoutManager(layoutManager);//显示方式传入recyycleview
+        adapter = new UserMusicListAdapter(recMusicLists, 0);
+        recyclerView.setAdapter(adapter);//传入适配器并显示
 
+        adapter.setLongClickListener(new UserMusicListAdapter.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(int position) {
+                return false;
+            }
+        });
+
+        initMusicList();
+
+        //获取Toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        final ActionBar actionBar = getSupportActionBar();
+        ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setHomeAsUpIndicator(R.drawable.back);
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.fav_recycle_view);
-        GridLayoutManager layoutManager = new GridLayoutManager(this, 1);
-        recyclerView.setLayoutManager(layoutManager);
-        adapter = new FavAdapter(flbMusicList);
-        recyclerView.setAdapter(adapter);
-
-        final SearchView searchView = (SearchView) findViewById(R.id.fav_search_view);
+        searchView = (SearchView) findViewById(R.id.add_to_list_search_view);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
             searchView.findViewById(android.support.v7.appcompat.R.id.search_plate).setBackground(null);
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
             searchView.findViewById(android.support.v7.appcompat.R.id.submit_area).setBackground(null);
         }
+
         searchView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                flbMusicList.clear();
+                recMusicLists.clear();
                 searchView.setIconified(false);
             }
         });
@@ -85,7 +94,7 @@ public class FavActivity extends AppCompatActivity {
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                flbMusicList.clear();
+                recMusicLists.clear();
                 return false;
             }
         });
@@ -98,15 +107,15 @@ public class FavActivity extends AppCompatActivity {
             }
         });
 
-        adapter.setLongClickListener(new FavAdapter.OnLongClickListener() {
+        adapter.setLongClickListener(new UserMusicListAdapter.OnLongClickListener() {
             @Override
             public boolean onLongClick(int position) {
-                adapter.removeFromFav(position, userNo);
-                return true;
+                return false;
             }
         });
 
-        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_fav);
+        //下拉刷新
+        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh_add_to_list);
         swipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary);
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -125,6 +134,7 @@ public class FavActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         initMusicList();
+                        adapter.notifyDataSetChanged();
                         swipeRefreshLayout.setRefreshing(false);
                     }
                 });
@@ -132,18 +142,17 @@ public class FavActivity extends AppCompatActivity {
         }).start();
     }
 
-    private void initMusicList() {
-        flbMusicList.clear();
+    public void initMusicList() {
+        recMusicLists.clear();//清空数组
         new Thread(new Runnable() {
             @Override
             public void run() {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        List<MyFav> lists = LitePal.where("user_no = ?", userNo).order("music_name").find(MyFav.class);
-                        for (MyFav myFav : lists) {
-                            FLBMusic flbMusic = new FLBMusic(myFav.getMusic_name(), myFav.getSinger_name(), myFav.getPage_name());
-                            flbMusicList.add(flbMusic);
+                        List<MyMusicList> lists = LitePal.where("user_no = ?", userNo).order("list_name").find(MyMusicList.class);
+                        for (MyMusicList m : lists) {
+                            adapter.addData(0, m.getList_name(), R.drawable.note);
                         }
                     }
                 });
@@ -152,31 +161,22 @@ public class FavActivity extends AppCompatActivity {
     }
 
     private void search(final String text) {
-        flbMusicList.clear();
+        recMusicLists.clear();
         new Thread(new Runnable() {
             @Override
             public void run() {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        List<MyFav> lists = LitePal.where("music_name like ?", "%" + text + "%").order("music_name").find(MyFav.class);
-                        for (MyFav myFav : lists) {
-                            FLBMusic flbMusic = new FLBMusic(myFav.getMusic_name(), myFav.getSinger_name(), myFav.getPage_name());
-                            flbMusicList.add(flbMusic);
+                        List<MyMusicList> lists = LitePal.where("list_name like ?", "%" + text + "%").order("list_name").find(MyMusicList.class);
+                        for (MyMusicList myMusicList : lists) {
+                            RecMusicList recMusicList = new RecMusicList(myMusicList.getList_name(), R.drawable.note);
+                            recMusicLists.add(recMusicList);
                         }
                     }
                 });
             }
         }).start();
-    }
-
-    public void getLocal(FLBMusic flbMusic, int playFlag) {
-        //向MA中传值
-        Intent intent = new Intent();
-        intent.putExtra("flb_path", flbMusic.getPageName());
-        intent.putExtra("flb_playFlag", playFlag);
-        intent.putExtra("flb_way", 1);
-        setResult(RESULT_OK, intent);
     }
 
     @Override
@@ -188,5 +188,10 @@ public class FavActivity extends AppCompatActivity {
             default:
         }
         return true;
+    }
+
+    @Override
+    public void finish() {
+        super.finish();
     }
 }

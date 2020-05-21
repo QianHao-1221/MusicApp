@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 
 import com.example.musicapp.R;
 import com.example.musicapp.adapter.RecMusicListAdapter;
+import com.example.musicapp.db.FLBMusic;
 import com.example.musicapp.db.RecMusicList;
 import com.example.musicapp.db.SysRecMusicList;
 
@@ -26,6 +27,8 @@ public class FirstLayout extends Fragment {
 
     private List<RecMusicList> recMusicLists = new ArrayList<>();
 
+    private List<FLBMusic> flbMusicList = new ArrayList<>();
+
     private RecMusicListAdapter adapter;
 
     private SwipeRefreshLayout swipeRefreshLayout;
@@ -34,17 +37,18 @@ public class FirstLayout extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.layout1, container, false);
+        final View view = inflater.inflate(R.layout.layout1, container, false);
 
         initMusicList();
 
         //推荐列表获取
         RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.layout1_recycle_view);
-        GridLayoutManager layoutManager = new GridLayoutManager(view.getContext(), 2);
+        GridLayoutManager layoutManager = new GridLayoutManager(view.getContext(), 3);
         recyclerView.setLayoutManager(layoutManager);
         adapter = new RecMusicListAdapter(recMusicLists);
         recyclerView.setAdapter(adapter);
 
+        //搜索列表获取
         searchView = (SearchView) view.findViewById(R.id.search_view);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
             searchView.findViewById(android.support.v7.appcompat.R.id.search_plate).setBackground(null);
@@ -53,10 +57,37 @@ public class FirstLayout extends Fragment {
             searchView.findViewById(android.support.v7.appcompat.R.id.submit_area).setBackground(null);
         }
 
+        //搜索列表点击事件
         searchView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                recMusicLists.clear();
                 searchView.setIconified(false);
+            }
+        });
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            //搜索栏提交事件
+            public boolean onQueryTextSubmit(String query) {
+                search(query);
+                return false;
+            }
+
+            //搜索栏改变事件
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                recMusicLists.clear();
+                return false;
+            }
+        });
+
+        //搜索栏关闭事件
+        searchView.setOnCloseListener(new SearchView.OnCloseListener() {
+            @Override
+            public boolean onClose() {
+                initMusicList();
+                return false;
             }
         });
 
@@ -77,16 +108,30 @@ public class FirstLayout extends Fragment {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
                 getActivity().runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        adapter.notifyDataSetChanged();
+                        initMusicList();
                         swipeRefreshLayout.setRefreshing(false);
+                    }
+                });
+            }
+        }).start();
+    }
+
+    private void search(final String text) {
+        recMusicLists.clear();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        List<SysRecMusicList> lists = LitePal.where("list_name like ?", "%" + text + "%").order("list_name").find(SysRecMusicList.class);
+                        for (SysRecMusicList sysRecMusicList : lists) {
+                            RecMusicList recMusicList = new RecMusicList(sysRecMusicList.getList_name(), sysRecMusicList.getImageId());
+                            recMusicLists.add(recMusicList);
+                        }
                     }
                 });
             }
@@ -103,7 +148,7 @@ public class FirstLayout extends Fragment {
                     public void run() {
                         List<SysRecMusicList> lists = LitePal.order("list_name").find(SysRecMusicList.class);
                         for (SysRecMusicList sysRecMusicList : lists) {
-                            RecMusicList recMusicList = new RecMusicList(sysRecMusicList.getList_name(),sysRecMusicList.getImageId());
+                            RecMusicList recMusicList = new RecMusicList(sysRecMusicList.getList_name(), sysRecMusicList.getImageId());
                             recMusicLists.add(recMusicList);
                         }
                     }

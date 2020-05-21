@@ -1,5 +1,6 @@
 package com.example.musicapp;
 
+import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -11,7 +12,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -22,31 +27,35 @@ import com.example.musicapp.db.FLBMusic;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RecMusicListInfoActivity extends AppCompatActivity {
+public class RecMusicListInfoActivity extends AppCompatActivity implements View.OnClickListener {
 
     public static final String MUSIC_NAME = "music_name";
 
     public static final String MUSIC_IMAGE_ID = "music_image_id";
 
-    private List<FLBMusic> data = new ArrayList<>();
+    private List<FLBMusic> flbMusics = new ArrayList<>();
 
     private String musicName, userNo;
 
     private RecAdapter adapter;
 
-    private int userSituation;
+    private int userSituation, flag;
+
+    private Dialog bottomDialog;//定义底部弹出菜单
+
+    private SharedPreferences preferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rec_music_list_info);
 
-        Toast.makeText(RecMusicListInfoActivity.this, "长按可以添加到我喜欢哦", Toast.LENGTH_SHORT).show();
+        Toast.makeText(RecMusicListInfoActivity.this, "长按添加", Toast.LENGTH_SHORT).show();
 
         initMusicList();
 
         //取出SharedPerferences对象data.xml文件中用户的数据
-        SharedPreferences preferences = getSharedPreferences("data", MODE_PRIVATE);
+        preferences = getSharedPreferences("data", MODE_PRIVATE);
         userNo = preferences.getString("userNo", "");
         userSituation = preferences.getInt("userSituation", 0);
 
@@ -62,7 +71,7 @@ public class RecMusicListInfoActivity extends AppCompatActivity {
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.info_list_view);
         LinearLayoutManager manager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(manager);
-        adapter = new RecAdapter(data);
+        adapter = new RecAdapter(flbMusics);
         recyclerView.setAdapter(adapter);
 
         adapter.setLongClickListener(new RecAdapter.OnLongClickListener() {
@@ -71,7 +80,8 @@ public class RecMusicListInfoActivity extends AppCompatActivity {
                 if (userSituation == 0) {
                     Toast.makeText(RecMusicListInfoActivity.this, "登录后使用此功能", Toast.LENGTH_SHORT).show();
                 } else {
-                    adapter.addToFav(position, userNo);
+                    flag = position;
+                    showDia();
                 }
                 return true;
             }
@@ -90,8 +100,21 @@ public class RecMusicListInfoActivity extends AppCompatActivity {
         Glide.with(this).load(musicImageId).into(musicImageView);//设置标题图片
     }
 
+
+    private void showDia() {
+        bottomDialog = new Dialog(this, R.style.BottomDialog);
+        View contentView = LayoutInflater.from(this).inflate(R.layout.add, null);
+        bottomDialog.setContentView(contentView);
+        ViewGroup.LayoutParams layoutParams = contentView.getLayoutParams();
+        layoutParams.width = getResources().getDisplayMetrics().widthPixels;
+        contentView.setLayoutParams(layoutParams);
+        bottomDialog.getWindow().setGravity(Gravity.BOTTOM);
+        bottomDialog.getWindow().setWindowAnimations(R.style.BottomDialog_Animation);
+        bottomDialog.show();
+    }
+
     private void initMusicList() {
-        data.clear();
+        flbMusics.clear();
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -113,7 +136,7 @@ public class RecMusicListInfoActivity extends AppCompatActivity {
                             String artist = cursor.getString(artistIndex);
                             String packages = cursor.getString(uriIndex);
                             FLBMusic m = new FLBMusic(musicName, artist, packages);
-                            data.add(m);
+                            flbMusics.add(m);
                         }
                     }
                 });
@@ -129,5 +152,24 @@ public class RecMusicListInfoActivity extends AppCompatActivity {
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.add_to_fav:
+                adapter.addToFav(flag, userNo);
+                break;
+            case R.id.add_to_list:
+                adapter.addToList(flag, userNo);
+                Intent intent = new Intent(this, AddToListActivity.class);
+                intent.putExtra("userNo", userNo);
+                startActivity(intent);
+                break;
+            case R.id.add_cancel:
+                bottomDialog.cancel();
+                break;
+            default:
+        }
     }
 }

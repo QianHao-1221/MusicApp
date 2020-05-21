@@ -1,7 +1,6 @@
 package com.example.musicapp.adapter;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Looper;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
@@ -11,17 +10,17 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.musicapp.FavActivity;
 import com.example.musicapp.R;
 import com.example.musicapp.db.FLBMusic;
 import com.example.musicapp.db.MyFav;
+import com.example.musicapp.service.MusicService;
 
 import org.litepal.LitePal;
 
 import java.util.List;
 
-import static android.content.Context.MODE_PRIVATE;
-
-public class RecAdapter extends RecyclerView.Adapter<RecAdapter.ViewHolder> {
+public class FavAdapter extends RecyclerView.Adapter<FavAdapter.ViewHolder> {
 
     private Context mContext;
 
@@ -31,7 +30,6 @@ public class RecAdapter extends RecyclerView.Adapter<RecAdapter.ViewHolder> {
 
     private FLBMusic flbMusic;
 
-//    private DownloadService.DownloadBinder downloadBinder;
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         CardView cardView;
@@ -46,7 +44,7 @@ public class RecAdapter extends RecyclerView.Adapter<RecAdapter.ViewHolder> {
         }
     }
 
-    public RecAdapter(List<FLBMusic> flbMusics) {
+    public FavAdapter(List<FLBMusic> flbMusics) {
         mFLBmusic = flbMusics;
     }
 
@@ -62,50 +60,31 @@ public class RecAdapter extends RecyclerView.Adapter<RecAdapter.ViewHolder> {
             public void onClick(View view) {
                 int position = holder.getAdapterPosition();
                 flbMusic = mFLBmusic.get(position);
-                //开始下载
-//                String url = "https://www.iconfont.cn/api/icon/downloadIcon?type=png&ids=1312167|-1&path_attributes=fill%3D%22%23769aff%22%7Cfill%3D%22%23769aff%22%7Cfill%3D%22%23ffffff%22&size=80&ctoken=Sb6toef0INzBii2HsW8mEw_u";
-//                downloadBinder.startDownload(url);
+                MusicService musicService = new MusicService();
+                musicService.play(flbMusic.getPageName());//点击音乐播放
+
+                //调用HA中的方法，把flbmusic对象传过去
+                FavActivity favActivity = (FavActivity) view.getContext();
+                favActivity.getLocal(flbMusic, 1);
             }
         });
         return holder;
     }
 
-    public void addToFav(int position, final String userNo) {
-        //添加数据到喜欢表，看有没有，没有就存进去
+    public void removeFromFav(int position, final String userNo) {
         flbMusic = mFLBmusic.get(position);
         new Thread(new Runnable() {
             @Override
             public void run() {
                 Looper.prepare();
-                List<MyFav> myFavList = LitePal.where("user_no = ? and music_name = ?", userNo, flbMusic.getMusicName()).find(MyFav.class);
-                if (myFavList.size() == 0) {
-                    MyFav m = new MyFav();
-                    m.setUser_no(userNo);
-                    m.setMusic_name(flbMusic.getMusicName());
-                    m.setSinger_name(flbMusic.getSingerName());
-                    m.setPage_name(flbMusic.getPageName());
-                    m.save();
-                    Toast.makeText(mContext, "成功添加到我喜欢！", Toast.LENGTH_SHORT).show();
+                List<MyFav> myFavList = LitePal.where("user_no = ? and music_name = ? and singer_name = ?", userNo, flbMusic.getMusicName(), flbMusic.getSingerName()).find(MyFav.class);
+                if (myFavList.size() != 0) {
+                    LitePal.deleteAll(MyFav.class, "user_no = ? and music_name = ? and singer_name = ?", userNo, flbMusic.getMusicName(), flbMusic.getSingerName());
+                    Toast.makeText(mContext, "已经移出我喜欢", Toast.LENGTH_SHORT).show();
                 } else {
-                    Toast.makeText(mContext, "已经添加过啦", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(mContext, "已经移出我喜欢", Toast.LENGTH_SHORT).show();
                 }
                 Looper.loop();
-            }
-        }).start();
-    }
-
-    public void addToList(final int position, final String userNo) {
-        flbMusic = mFLBmusic.get(position);
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                //把音乐名、演唱者、路径、用户id存到addInfo文件中
-                SharedPreferences.Editor editor = mContext.getSharedPreferences("addInfo", MODE_PRIVATE).edit();
-                editor.putString("musicName", flbMusic.getMusicName());
-                editor.putString("singerName", flbMusic.getSingerName());
-                editor.putString("path", flbMusic.getPageName());
-                editor.putString("userNo", userNo);
-                editor.apply();
             }
         }).start();
     }

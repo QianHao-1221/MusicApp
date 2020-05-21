@@ -180,6 +180,9 @@ public class RegisterActivity extends AppCompatActivity {
                                     //返回数组长度不为1，则表示已经注册过
                                     message.what = LIM_NO;
                                     handler.sendMessage(message);
+                                } else if ("".equals(inputNo)) {
+                                    message.what = LIM_LENGTH;
+                                    handler.sendMessage(message);
                                 } else if ("".equals(inputName)) {
                                     message.what = NAME_LENGTH;
                                     handler.sendMessage(message);
