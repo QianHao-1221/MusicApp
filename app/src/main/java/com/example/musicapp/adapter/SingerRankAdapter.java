@@ -1,21 +1,24 @@
 package com.example.musicapp.adapter;
 
 import android.content.Context;
+import android.os.Looper;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.example.musicapp.LocalMusicActivity;
 import com.example.musicapp.R;
 import com.example.musicapp.db.FLBMusic;
-import com.example.musicapp.service.MusicService;
+import com.example.musicapp.db.MyFav;
+
+import org.litepal.LitePal;
 
 import java.util.List;
 
-public class LocalAdapter extends RecyclerView.Adapter<LocalAdapter.ViewHolder> {
+public class SingerRankAdapter extends RecyclerView.Adapter<SingerRankAdapter.ViewHolder> {
 
     private Context mContext;
 
@@ -24,6 +27,7 @@ public class LocalAdapter extends RecyclerView.Adapter<LocalAdapter.ViewHolder> 
     private OnLongClickListener mLongClickListener;
 
     private FLBMusic flbMusic;
+
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         CardView cardView;
@@ -38,7 +42,7 @@ public class LocalAdapter extends RecyclerView.Adapter<LocalAdapter.ViewHolder> 
         }
     }
 
-    public LocalAdapter(List<FLBMusic> flbMusics) {
+    public SingerRankAdapter(List<FLBMusic> flbMusics) {
         mFLBmusic = flbMusics;
     }
 
@@ -54,15 +58,27 @@ public class LocalAdapter extends RecyclerView.Adapter<LocalAdapter.ViewHolder> 
             public void onClick(View view) {
                 int position = holder.getAdapterPosition();
                 flbMusic = mFLBmusic.get(position);
-                MusicService musicService = new MusicService();
-                musicService.play(flbMusic.getPageName());//点击音乐播放
-
-                //调用LMA中的方法，把flbmusic对象传过去
-                LocalMusicActivity localMusicActivity = (LocalMusicActivity) view.getContext();
-                localMusicActivity.getLocal(flbMusic, 1);
             }
         });
         return holder;
+    }
+
+    public void removeFromFav(int position, final String userNo) {
+        flbMusic = mFLBmusic.get(position);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Looper.prepare();
+                List<MyFav> myFavList = LitePal.where("user_no = ? and music_name = ? and singer_name = ?", userNo, flbMusic.getMusicName(), flbMusic.getSingerName()).find(MyFav.class);
+                if (myFavList.size() != 0) {
+                    LitePal.deleteAll(MyFav.class, "user_no = ? and music_name = ? and singer_name = ?", userNo, flbMusic.getMusicName(), flbMusic.getSingerName());
+                    Toast.makeText(mContext, "已经移出我喜欢", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(mContext, "已经移出我喜欢", Toast.LENGTH_SHORT).show();
+                }
+                Looper.loop();
+            }
+        }).start();
     }
 
     public void setLongClickListener(OnLongClickListener longClickListener) {

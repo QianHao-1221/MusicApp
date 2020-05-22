@@ -100,7 +100,6 @@ public class RecMusicListInfoActivity extends AppCompatActivity implements View.
         Glide.with(this).load(musicImageId).into(musicImageView);//设置标题图片
     }
 
-
     private void showDia() {
         bottomDialog = new Dialog(this, R.style.BottomDialog);
         View contentView = LayoutInflater.from(this).inflate(R.layout.add, null);

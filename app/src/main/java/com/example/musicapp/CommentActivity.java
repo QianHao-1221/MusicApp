@@ -103,8 +103,18 @@ public class CommentActivity extends AppCompatActivity implements View.OnClickLi
         new Thread(new Runnable() {
             @Override
             public void run() {
-                initComment();
-                swipeRefreshLayout.setRefreshing(false);
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        initComment();
+                        swipeRefreshLayout.setRefreshing(false);
+                    }
+                });
             }
         }).start();
     }

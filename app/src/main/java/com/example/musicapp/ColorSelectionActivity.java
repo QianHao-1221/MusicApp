@@ -11,6 +11,7 @@ import android.view.MenuItem;
 
 import com.example.musicapp.adapter.ColorsAdapter;
 import com.example.musicapp.db.Colors;
+import com.example.musicapp.db.Pic;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +19,8 @@ import java.util.List;
 public class ColorSelectionActivity extends AppCompatActivity {
 
     private List<Colors> colorsList = new ArrayList<>();
+
+    private List<Pic> pics = new ArrayList<>();
 
     private String colorsName;
 
@@ -42,7 +45,7 @@ public class ColorSelectionActivity extends AppCompatActivity {
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.color_recycler_view);
         StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.VERTICAL);//3列，垂直
         recyclerView.setLayoutManager(layoutManager);
-        ColorsAdapter adapter = new ColorsAdapter(colorsList, this);
+        ColorsAdapter adapter = new ColorsAdapter(colorsList);
         recyclerView.setAdapter(adapter);
     }
 

@@ -32,6 +32,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.musicapp.adapter.MyViewPagerAdapter;
+import com.example.musicapp.db.MusicInfo;
 import com.example.musicapp.db.User;
 import com.example.musicapp.layout.FirstLayout;
 import com.example.musicapp.layout.SecondLayout;
@@ -66,7 +67,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private Dialog bottomDialog;//定义底部弹出菜单
 
-    public int userSituation = 0, returnPicId, playWay, pickWay, flag, playFlag, way = 0;//0:未登录、未播放 1：已登录，播放中
+    public int userSituation = 0, returnPicId, playWay, pickWay, flag, playFlag, way = 0, returnImg;//0:未登录、未播放 1：已登录，播放中
 
     private String returnUserNo, returnUserName, returnColorsName = "blue", path;
 
@@ -100,6 +101,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         LitePal.getDatabase();//创建数据库
         initView();//初始化页面`
+
+        MusicInfo musicInfo = new MusicInfo();
+        musicInfo.setMusic_package("/storage/emulated/0/gg .mp3");
+        musicInfo.updateAll("id = ?", "15");
 
         customViewPager = (CustomViewPager) findViewById(R.id.container);
         customViewPager.setScanScroll(false);//禁止页面滑动
@@ -215,7 +220,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         initColor(userSituation, returnColorsName, 2);
         customViewPager.setCurrentItem(1);//初始页面
         actionBar.setTitle("我的");
-
     }
 
     //左滑菜单启动
@@ -380,7 +384,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 intent.putExtra("flb_path", path);
                 intent.putExtra("flb_playFlag", playFlag);
                 intent.putExtra("flb_way", way);
-
+                intent.putExtra("returnImg", returnImg);
                 startActivityForResult(intent, 5);
                 overridePendingTransition(R.anim.bottom_in, R.anim.bottom_silent);
                 break;
@@ -425,6 +429,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.history_music:
                 startActivityForResult(new Intent(MainActivity.this, HistoryActivity.class), 8);
+                overridePendingTransition(R.anim.slide_in_right, R.anim.bottom_silent);
+                break;
+            case R.id.layout1_search:
+                startActivityForResult(new Intent(MainActivity.this, SearchActivity.class), 9);
+                overridePendingTransition(R.anim.slide_in_right, R.anim.bottom_silent);
+                break;
+            case R.id.layout1_rank:
+                startActivityForResult(new Intent(MainActivity.this, RankActivity.class), 10);
                 overridePendingTransition(R.anim.slide_in_right, R.anim.bottom_silent);
                 break;
             default:
@@ -532,31 +544,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     pickWay = data.getIntExtra("pickWay", 100);
                     flag = data.getIntExtra("flag", 1);
                     way = data.getIntExtra("flb_way", 1);
+                    returnImg = data.getIntExtra("returnImg", R.drawable.note);
+                    musicPlayer.setImageResource(returnImg);
                     initMusicRotate();
                 }
                 break;
             case 6:
-                if (resultCode == RESULT_OK) {
-                    //音乐播放状态
-                    path = data.getStringExtra("flb_path");
-                    playFlag = data.getIntExtra("flb_playFlag", 100);
-                    way = data.getIntExtra("flb_way", 1);
-                }
-                break;
             case 7:
-                if (resultCode == RESULT_OK) {
-                    //音乐播放状态
-                    path = data.getStringExtra("flb_path");
-                    playFlag = data.getIntExtra("flb_playFlag", 100);
-                    way = data.getIntExtra("flb_way", 1);
-                }
-                break;
             case 8:
+            case 9:
+            case 10:
                 if (resultCode == RESULT_OK) {
                     //音乐播放状态
                     path = data.getStringExtra("flb_path");
                     playFlag = data.getIntExtra("flb_playFlag", 100);
                     way = data.getIntExtra("flb_way", 1);
+                    returnImg = data.getIntExtra("returnImg", R.drawable.note);
+                    musicPlayer.setImageResource(returnImg);
                 }
                 break;
             default:

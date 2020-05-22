@@ -60,7 +60,6 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.ViewHold
             public void onClick(View view) {
                 int position = holder.getAdapterPosition();
                 commentController = mCommentController.get(position);
-                //开始下载
             }
         });
         return holder;

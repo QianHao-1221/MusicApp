@@ -14,8 +14,9 @@ import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.example.musicapp.adapter.FavAdapter;
+import com.example.musicapp.adapter.FOHRLAdapter;
 import com.example.musicapp.db.FLBMusic;
+import com.example.musicapp.db.MusicInfo;
 import com.example.musicapp.db.MyFav;
 
 import org.litepal.LitePal;
@@ -27,7 +28,7 @@ public class FavActivity extends AppCompatActivity {
 
     private List<FLBMusic> flbMusicList = new ArrayList<>();
 
-    private FavAdapter adapter;
+    private FOHRLAdapter adapter;
 
     private String userNo;
 
@@ -58,7 +59,7 @@ public class FavActivity extends AppCompatActivity {
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.fav_recycle_view);
         GridLayoutManager layoutManager = new GridLayoutManager(this, 1);
         recyclerView.setLayoutManager(layoutManager);
-        adapter = new FavAdapter(flbMusicList);
+        adapter = new FOHRLAdapter(flbMusicList, "FavActivity");
         recyclerView.setAdapter(adapter);
 
         final SearchView searchView = (SearchView) findViewById(R.id.fav_search_view);
@@ -98,7 +99,7 @@ public class FavActivity extends AppCompatActivity {
             }
         });
 
-        adapter.setLongClickListener(new FavAdapter.OnLongClickListener() {
+        adapter.setLongClickListener(new FOHRLAdapter.OnLongClickListener() {
             @Override
             public boolean onLongClick(int position) {
                 adapter.removeFromFav(position, userNo);
@@ -159,7 +160,7 @@ public class FavActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        List<MyFav> lists = LitePal.where("music_name like ?", "%" + text + "%").order("music_name").find(MyFav.class);
+                        List<MyFav> lists = LitePal.where("user_no = ? and music_name like ?", userNo, "%" + text + "%").order("music_name").find(MyFav.class);
                         for (MyFav myFav : lists) {
                             FLBMusic flbMusic = new FLBMusic(myFav.getMusic_name(), myFav.getSinger_name(), myFav.getPage_name());
                             flbMusicList.add(flbMusic);
@@ -170,13 +171,22 @@ public class FavActivity extends AppCompatActivity {
         }).start();
     }
 
-    public void getLocal(FLBMusic flbMusic, int playFlag) {
-        //向MA中传值
-        Intent intent = new Intent();
-        intent.putExtra("flb_path", flbMusic.getPageName());
-        intent.putExtra("flb_playFlag", playFlag);
-        intent.putExtra("flb_way", 1);
-        setResult(RESULT_OK, intent);
+    public void getLocal(final FLBMusic flbMusic, final int playFlag) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                List<MusicInfo> musicInfos = LitePal.where("music_package = ?", flbMusic.getPageName()).find(MusicInfo.class);
+                for (MusicInfo musicInfo : musicInfos) {
+                    //向MA中传值
+                    Intent intent = new Intent();
+                    intent.putExtra("flb_path", musicInfo.getMusic_package());
+                    intent.putExtra("returnImg", musicInfo.getImage_no());
+                    intent.putExtra("flb_playFlag", playFlag);
+                    intent.putExtra("flb_way", 1);
+                    setResult(RESULT_OK, intent);
+                }
+            }
+        }).start();
     }
 
     @Override

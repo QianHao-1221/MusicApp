@@ -13,7 +13,7 @@ import android.view.MenuItem;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
-import com.example.musicapp.adapter.UserListAdapter;
+import com.example.musicapp.adapter.FOHRLAdapter;
 import com.example.musicapp.db.FLBMusic;
 import com.example.musicapp.db.MyMusicListInfo;
 
@@ -30,7 +30,7 @@ public class UserMusicListInfoActivity extends AppCompatActivity {
 
     private List<FLBMusic> flbMusicList = new ArrayList<>();
 
-    private UserListAdapter adapter;
+    private FOHRLAdapter adapter;
 
     private String listName;
 
@@ -54,7 +54,7 @@ public class UserMusicListInfoActivity extends AppCompatActivity {
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.user_list_recycle_view);
         LinearLayoutManager manager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(manager);
-        adapter = new UserListAdapter(flbMusicList);
+        adapter = new FOHRLAdapter(flbMusicList, "UserMusicListInfoActivity");
         recyclerView.setAdapter(adapter);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.user_list_toolbar);
@@ -67,11 +67,11 @@ public class UserMusicListInfoActivity extends AppCompatActivity {
         collapsingToolbarLayout.setTitle(musicName);
         Glide.with(this).load(musicImageId).into(musicImageView);
 
-        adapter.setLongClickListener(new UserListAdapter.OnLongClickListener() {
+        adapter.setLongClickListener(new FOHRLAdapter.OnLongClickListener() {
             @Override
             public boolean onLongClick(int position) {
                 SharedPreferences preferences = getSharedPreferences("data", MODE_PRIVATE);
-                adapter.removeFromList(position, preferences.getString("userNo", ""),listName);
+                adapter.removeFromList(position, preferences.getString("userNo", ""), listName);
                 return true;
             }
         });
@@ -86,6 +86,7 @@ public class UserMusicListInfoActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         SharedPreferences preferences = getSharedPreferences("data", MODE_PRIVATE);
+                        // 查询歌单详细信息表，查询用户存储在歌单中的歌曲信息
                         List<MyMusicListInfo> myMusicListInfos = LitePal.where("user_no = ? and list_name = ?", preferences.getString("userNo", ""), listName).order("music_name").find(MyMusicListInfo.class);
                         for (MyMusicListInfo myMusicListInfo : myMusicListInfos) {
                             if (myMusicListInfos.size() == 0) {

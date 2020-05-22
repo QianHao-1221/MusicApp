@@ -15,7 +15,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.example.musicapp.adapter.LocalAdapter;
+import com.example.musicapp.adapter.FOHRLAdapter;
 import com.example.musicapp.db.FLBMusic;
 import com.example.musicapp.db.MusicInfo;
 
@@ -28,7 +28,7 @@ public class LocalMusicActivity extends AppCompatActivity {
 
     private List<FLBMusic> flbMusicList = new ArrayList<>();
 
-    private LocalAdapter adapter;
+    private FOHRLAdapter adapter;
 
     private String musicName, artist, packages;
 
@@ -52,7 +52,7 @@ public class LocalMusicActivity extends AppCompatActivity {
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.local_recycle_view);
         GridLayoutManager layoutManager = new GridLayoutManager(this, 1);
         recyclerView.setLayoutManager(layoutManager);
-        adapter = new LocalAdapter(flbMusicList);
+        adapter = new FOHRLAdapter(flbMusicList, "LocalMusicActivity");
         recyclerView.setAdapter(adapter);
 
         final SearchView searchView = (SearchView) findViewById(R.id.local_search_view);
@@ -93,7 +93,7 @@ public class LocalMusicActivity extends AppCompatActivity {
             }
         });
 
-        adapter.setLongClickListener(new LocalAdapter.OnLongClickListener() {
+        adapter.setLongClickListener(new FOHRLAdapter.OnLongClickListener() {
             @Override
             public boolean onLongClick(int position) {
                 return false;
@@ -175,13 +175,22 @@ public class LocalMusicActivity extends AppCompatActivity {
         }).start();
     }
 
-    public void getLocal(FLBMusic flbMusic, int playFlag) {
-        //向MA中传值
-        Intent intent = new Intent();
-        intent.putExtra("flb_path", flbMusic.getPageName());
-        intent.putExtra("flb_playFlag", playFlag);
-        intent.putExtra("flb_way", 1);
-        setResult(RESULT_OK, intent);
+    public void getLocal(final FLBMusic flbMusic, final int playFlag) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                List<MusicInfo> musicInfos = LitePal.where("music_package = ?", flbMusic.getPageName()).find(MusicInfo.class);
+                for (MusicInfo musicInfo : musicInfos) {
+                    //向MA中传值
+                    Intent intent = new Intent();
+                    intent.putExtra("flb_path", musicInfo.getMusic_package());
+                    intent.putExtra("returnImg", musicInfo.getImage_no());
+                    intent.putExtra("flb_playFlag", playFlag);
+                    intent.putExtra("flb_way", 1);
+                    setResult(RESULT_OK, intent);
+                }
+            }
+        }).start();
     }
 
     @Override

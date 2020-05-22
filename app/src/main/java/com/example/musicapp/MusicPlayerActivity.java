@@ -18,26 +18,25 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.musicapp.db.History;
 import com.example.musicapp.db.MusicInfo;
+import com.example.musicapp.db.MyFav;
 import com.example.musicapp.service.MusicService;
 
 import org.litepal.LitePal;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class MusicPlayerActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private ImageView playWay, lastMusic, playBtn, nextMusic, musicImg;
+    private ImageView playWay, lastMusic, playBtn, nextMusic, musicImg, fav;
 
     private int pickWay = 1;
 
     public Intent intent, intent2;
 
-    private int playwaySituation = 1, flag = 0, userSituation = 0, playflag, way;//0:未播放 1:开始播放
+    private int playwaySituation = 1, flag = 0, userSituation = 0, playflag, way, returnImg;//0:未播放 1:开始播放
 
     private TextView currentTime, allTime, music, singer;
 
@@ -156,6 +155,7 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
         path = intent2.getStringExtra("flb_path");
         playflag = intent2.getIntExtra("flb_playFlag", 0);
         way = intent2.getIntExtra("flb_way", 1);
+        returnImg = intent2.getIntExtra("returnImg", R.drawable.note);
 
         if (path != null && playflag == 1) {
             if (way == 1) {
@@ -171,6 +171,7 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
         musicImg = (ImageView) findViewById(R.id.player_song_pic);
         music = (TextView) findViewById(R.id.player_song_name);
         singer = (TextView) findViewById(R.id.player_singer_name);
+        fav = (ImageView) findViewById(R.id.fav_btn);
 
 //        MusicInfo musicInfo = new MusicInfo();
 //        musicInfo.setMusic_name("出山");
@@ -189,8 +190,41 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
         currentTime = (TextView) findViewById(R.id.current_time);
         allTime = (TextView) findViewById(R.id.all_time);
 
+        initData(path, way);
         PlayWay();
         setPlayWay(pickWay);
+    }
+
+    private void initData(final String path, final int way) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (userSituation == 0) {
+                            fav.setImageResource(R.drawable.zzzlike);
+                        } else {
+                            if (way == 0) {
+                                List<MyFav> myFavs = LitePal.where("page_name = ? and user_no = ?", musicService.currentPath(), userNo).find(MyFav.class);
+                                if (myFavs.size() != 0) {
+                                    fav.setImageResource(R.drawable.zzzlikered);
+                                } else {
+                                    fav.setImageResource(R.drawable.zzzlike);
+                                }
+                            } else {
+                                List<MyFav> myFavs = LitePal.where("page_name = ? and user_no = ?", path, userNo).find(MyFav.class);
+                                if (myFavs.size() != 0) {
+                                    fav.setImageResource(R.drawable.zzzlikered);
+                                } else {
+                                    fav.setImageResource(R.drawable.zzzlike);
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }).start();
     }
 
     @Override
@@ -230,10 +264,12 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
                 musicService.playOrPause();
                 break;
             case R.id.last_music:
-                musicService.preMusic();
+                flag = 1;
                 way = 0;
+                musicService.preMusic();
                 change();
                 PlayWay();
+                initData(musicService.currentPath(), way);
                 seekBar.setMax(musicService.mp.getDuration());
                 break;
             case R.id.next_music:
@@ -242,20 +278,33 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
                 musicService.nextMusic();
                 change();
                 PlayWay();
+                initData(musicService.currentPath(), way);
                 seekBar.setMax(musicService.mp.getDuration());
                 break;
             case R.id.comment:
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        List<MusicInfo> musicInfos = LitePal.where("music_package = ?", musicService.currentPath()).find(MusicInfo.class);
-                        for (MusicInfo musicInfo : musicInfos) {
-                            Intent intent = new Intent(MusicPlayerActivity.this, CommentActivity.class);
-                            intent.putExtra("userSituation", userSituation);
-                            intent.putExtra("musicId", musicInfo.getId());
-                            startActivity(intent);
-                            overridePendingTransition(R.anim.bottom_in, R.anim.bottom_silent);
+                        if (way == 0) {
+                            List<MusicInfo> musicInfos = LitePal.where("music_package = ?", musicService.currentPath()).find(MusicInfo.class);
+                            for (MusicInfo musicInfo : musicInfos) {
+                                Intent intent = new Intent(MusicPlayerActivity.this, CommentActivity.class);
+                                intent.putExtra("userSituation", userSituation);
+                                intent.putExtra("musicId", musicInfo.getId());
+                                startActivity(intent);
+                                overridePendingTransition(R.anim.bottom_in, R.anim.bottom_silent);
+                            }
+                        } else {
+                            List<MusicInfo> musicInfos = LitePal.where("music_package = ?", path).find(MusicInfo.class);
+                            for (MusicInfo musicInfo : musicInfos) {
+                                Intent intent = new Intent(MusicPlayerActivity.this, CommentActivity.class);
+                                intent.putExtra("userSituation", userSituation);
+                                intent.putExtra("musicId", musicInfo.getId());
+                                startActivity(intent);
+                                overridePendingTransition(R.anim.bottom_in, R.anim.bottom_silent);
+                            }
                         }
+
                     }
                 }).start();
                 break;
@@ -277,7 +326,50 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
                     }
                 }).start();
                 break;
+            case R.id.fav_btn:
+                if (userSituation == 0) {
+                    Toast.makeText(MusicPlayerActivity.this, "登录后使用此功能", Toast.LENGTH_SHORT).show();
+                } else {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (way == 0) {
+                                        favInfo(musicService.currentPath());
+                                    } else {
+                                        favInfo(path);
+                                    }
+                                }
+                            });
+                        }
+                    }).start();
+                }
             default:
+        }
+    }
+
+    private void favInfo(String path) {
+        List<MyFav> myFavs = LitePal.where("page_name = ? and user_no = ?", path, userNo).find(MyFav.class);
+        List<MusicInfo> musicInfos = LitePal.where("music_package = ?", path).find(MusicInfo.class);
+        if (myFavs.size() != 0) {
+            for (MusicInfo musicInfo : musicInfos) {
+                LitePal.deleteAll(MyFav.class, "user_no = ? and music_name = ? and singer_name = ?", userNo, musicInfo.getMusic_name(), musicInfo.getMusic_player());
+                fav.setImageResource(R.drawable.zzzlike);
+                Toast.makeText(MusicPlayerActivity.this, "已从我喜欢中移除！", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            for (MusicInfo musicInfo : musicInfos) {
+                MyFav myFav = new MyFav();
+                myFav.setUser_no(userNo);
+                myFav.setMusic_name(musicInfo.getMusic_name());
+                myFav.setSinger_name(musicInfo.getMusic_player());
+                myFav.setPage_name(musicInfo.getMusic_package());
+                myFav.save();
+                fav.setImageResource(R.drawable.zzzlikered);
+                Toast.makeText(MusicPlayerActivity.this, "已添加到我喜欢！", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
@@ -314,12 +406,6 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
                         musicService.nextMusic();
                         change();
                         seekBar.setMax(musicService.mp.getDuration());
-                        if (flag == 1) {
-                            saveToHistory();
-                        } else {
-                            Toast.makeText(MusicPlayerActivity.this, "这首歌为系统推荐，不计入试听历史", Toast.LENGTH_SHORT).show();
-                            flag = 1;
-                        }
                         way = 0;
                     }
                 });
@@ -333,12 +419,6 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
                         musicService.noMusic();
                         change();
                         seekBar.setMax(musicService.mp.getDuration());
-                        if (flag == 1) {
-                            saveToHistory();
-                        } else {
-                            Toast.makeText(MusicPlayerActivity.this, "这首歌为系统推荐，不计入试听历史", Toast.LENGTH_SHORT).show();
-                            flag = 1;
-                        }
                         way = 0;
                     }
                 });
@@ -350,37 +430,6 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
                 break;
             default:
         }
-    }
-
-    //    //当前歌曲存储到History表中
-    private void saveToHistory() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");// HH:mm:ss
-                        Date date = new Date(System.currentTimeMillis());
-                        History history = new History();
-                        List<History> histories = LitePal.where("path = ?", musicService.path()).find(History.class);
-                        List<MusicInfo> musicInfos = LitePal.where("music_package = ?", musicService.path()).find(MusicInfo.class);
-                        if (histories.size() == 0) {
-                            for (MusicInfo musicInfo : musicInfos) {
-                                history.setMusic_name(musicInfo.getMusic_name());
-                                history.setSinger_name(musicInfo.getMusic_player());
-                                history.setTime(simpleDateFormat.format(date));
-                                history.setPath(musicInfo.getMusic_package());
-                                history.save();
-                            }
-                        } else {
-                            history.setTime(simpleDateFormat.format(date));
-                            history.updateAll("path = ?", musicService.path());
-                        }
-                    }
-                });
-            }
-        }).start();
     }
 
     public void change() {
@@ -395,6 +444,7 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
                             musicImg.setImageResource(musicInfo.getImage_no());
                             music.setText(musicInfo.getMusic_name());
                             singer.setText(musicInfo.getMusic_player());
+                            returnImg = musicInfo.getImage_no();
                         }
                     }
                 });
@@ -445,6 +495,7 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
         intent.putExtra("pickWay", pickWay);
         intent.putExtra("flag", flag);
         intent.putExtra("flb_way", way);
+        intent.putExtra("returnImg", returnImg);
         setResult(RESULT_OK, intent);
         super.finish();
     }

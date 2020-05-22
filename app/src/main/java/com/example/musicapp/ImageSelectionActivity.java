@@ -9,7 +9,7 @@ import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 
-import com.example.musicapp.adapter.PicAdapter;
+import com.example.musicapp.adapter.ImageAdapter;
 import com.example.musicapp.db.Pic;
 
 import java.util.ArrayList;
@@ -38,7 +38,7 @@ public class ImageSelectionActivity extends AppCompatActivity {
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.image_recycler_view);
         StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(layoutManager);
-        PicAdapter adapter = new PicAdapter(picturesList, this);
+        ImageAdapter adapter = new ImageAdapter(picturesList);
         recyclerView.setAdapter(adapter);
     }
 

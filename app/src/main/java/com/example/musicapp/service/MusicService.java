@@ -6,8 +6,16 @@ import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
 
+import com.example.musicapp.db.History;
+import com.example.musicapp.db.MusicInfo;
+
+import org.litepal.LitePal;
+
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -57,6 +65,7 @@ public class MusicService extends Service {
         }
         mp.seekTo(0);
         mp.start();
+        saveToHistory(path);
         mp.setLooping(true);
     }
 
@@ -65,11 +74,18 @@ public class MusicService extends Service {
             mp.pause();
         } else {
             mp.start();
+            saveToHistory(musicDir.get(musicIndex));
         }
     }
 
     public String path() {
-        return musicDir.get(musicIndex - 1);
+        String path;
+        if (musicIndex - 1 == -1) {
+            path = musicDir.get(musicIndex);
+        } else {
+            path = musicDir.get(musicIndex - 1);
+        }
+        return path;
     }
 
     public String currentPath() {
@@ -86,6 +102,7 @@ public class MusicService extends Service {
                 mp.prepare();
                 mp.seekTo(0);
                 mp.start();
+                saveToHistory(musicDir.get(musicIndex));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -103,6 +120,7 @@ public class MusicService extends Service {
                 mp.prepare();
                 mp.seekTo(0);
                 mp.start();
+                saveToHistory(musicDir.get(musicIndex));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -121,10 +139,37 @@ public class MusicService extends Service {
                 mp.prepare();
                 mp.seekTo(0);
                 mp.start();
+                saveToHistory(musicDir.get(musicIndex));
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+    }
+
+    //    //当前歌曲存储到History表中
+    private void saveToHistory(final String path) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy年MM月dd日 HH:mm:ss");// HH:mm:ss
+                Date date = new Date(System.currentTimeMillis());
+                History history = new History();
+                List<History> histories = LitePal.where("path = ?", path).find(History.class);
+                List<MusicInfo> musicInfos = LitePal.where("music_package = ?", path).find(MusicInfo.class);
+                if (histories.size() == 0) {
+                    for (MusicInfo musicInfo : musicInfos) {
+                        history.setMusic_name(musicInfo.getMusic_name());
+                        history.setSinger_name(musicInfo.getMusic_player());
+                        history.setTime(simpleDateFormat.format(date));
+                        history.setPath(musicInfo.getMusic_package());
+                        history.save();
+                    }
+                } else {
+                    history.setTime(simpleDateFormat.format(date));
+                    history.updateAll("path = ?", path);
+                }
+            }
+        }).start();
     }
 
     @Override

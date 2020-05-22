@@ -14,11 +14,9 @@ import com.example.musicapp.db.Pic;
 
 import java.util.List;
 
-public class PicAdapter extends RecyclerView.Adapter<PicAdapter.ViewHolder> {
+public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder> {
 
     private List<Pic> mPicList;
-
-    ImageSelectionActivity imageSelection;
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         View picView;
@@ -31,11 +29,9 @@ public class PicAdapter extends RecyclerView.Adapter<PicAdapter.ViewHolder> {
             picImage = (ImageView) view.findViewById(R.id.pic_image);
             picNo = (TextView) view.findViewById(R.id.pic_no);
         }
-
     }
 
-    public PicAdapter(List<Pic> picList, ImageSelectionActivity imageSelectionActivity) {
-        this.imageSelection = imageSelectionActivity;
+    public ImageAdapter(List<Pic> picList) {
         mPicList = picList;
     }
 
@@ -47,9 +43,10 @@ public class PicAdapter extends RecyclerView.Adapter<PicAdapter.ViewHolder> {
             @Override
             public void onClick(View v) {
                 int position = holder.getAdapterPosition();
+
                 Pic pic = mPicList.get(position);
-                imageSelection.getInfo(pic);//图片的对象传给ImageSelectionActivity以便取出数据
-                imageSelection = (ImageSelectionActivity) v.getContext();
+                ImageSelectionActivity imageSelection = (ImageSelectionActivity) v.getContext();
+                imageSelection.getInfo(pic);
                 imageSelection.finish();
             }
         });

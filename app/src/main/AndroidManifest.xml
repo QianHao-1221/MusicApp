@@ -56,16 +56,20 @@
         <activity
             android:name=".HistoryActivity"
             android:label="历史记录" />
-        <activity android:name=".UpdateNameActivity" />
-        <activity android:name=".UpdatePasswordActivity" />
+        <activity
+            android:name=".UpdateNameActivity"
+            android:label="修改昵称" />
+        <activity
+            android:name=".UpdatePasswordActivity"
+            android:label="修改密码" />
 
         <service
             android:name=".service.MusicService"
             android:exported="true" />
-        <!--<service-->
-        <!--android:name=".service.DownloadService"-->
-        <!--android:enabled="true"-->
-        <!--android:exported="true" />-->
+        <!-- <service -->
+        <!-- android:name=".service.DownloadService" -->
+        <!-- android:enabled="true" -->
+        <!-- android:exported="true" /> -->
 
         <activity
             android:name=".CommentActivity"
@@ -73,6 +77,12 @@
         <activity
             android:name=".AddToListActivity"
             android:label="添加到歌单" />
+        <activity
+            android:name=".SearchActivity"
+            android:label="搜索" />
+        <activity
+            android:name=".RankActivity"
+            android:label="排行" />
     </application>
 
 </manifest>

@@ -41,7 +41,6 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentRight="true"
                     android:layout_centerInParent="true"
-                    android:layout_gravity="right|center"
                     android:textColor="#111"
                     android:textSize="13dp" />
 

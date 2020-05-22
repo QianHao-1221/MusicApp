@@ -18,8 +18,6 @@ public class ColorsAdapter extends RecyclerView.Adapter<ColorsAdapter.ViewHolder
 
     private List<Colors> mColors;
 
-    ColorSelectionActivity colorSelection;
-
     static class ViewHolder extends RecyclerView.ViewHolder {
         View colorView;
         ImageView colorImage;
@@ -33,8 +31,7 @@ public class ColorsAdapter extends RecyclerView.Adapter<ColorsAdapter.ViewHolder
         }
     }
 
-    public ColorsAdapter(List<Colors> colorsList, ColorSelectionActivity colorSelection) {
-        this.colorSelection = colorSelection;
+    public ColorsAdapter(List<Colors> colorsList) {
         mColors = colorsList;
     }
 
@@ -48,12 +45,9 @@ public class ColorsAdapter extends RecyclerView.Adapter<ColorsAdapter.ViewHolder
             public void onClick(View v) {
                 int position = holder.getAdapterPosition();
                 Colors colors = mColors.get(position);
-
-                //获取名字主要是，然后传给ColorSelectionActivity，然后再传给MainActivity
-                colorSelection.getColorsName(colors);
-
                 //获取ColorSelectionActivity，调用它的的finish方法
-                colorSelection = (ColorSelectionActivity) v.getContext();
+                ColorSelectionActivity colorSelection = (ColorSelectionActivity) v.getContext();
+                colorSelection.getColorsName(colors);
                 colorSelection.finish();
             }
         });
